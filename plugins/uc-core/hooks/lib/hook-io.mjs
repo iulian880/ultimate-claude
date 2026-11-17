@@ -1,4 +1,15 @@
 // Shared stdin / exit-code protocol for uc-core hooks.
+import fs from 'node:fs';
+import { pathToFileURL } from 'node:url';
+
+/** True when the module at `moduleUrl` is the script node was started with (not an import). */
+export function isMain(moduleUrl) {
+  try {
+    return moduleUrl === pathToFileURL(fs.realpathSync(process.argv[1])).href;
+  } catch {
+    return false;
+  }
+}
 
 /** Parses hook stdin. Returns null for empty input, invalid JSON, or JSON that is not an object. */
 export function parseInput(raw) {
