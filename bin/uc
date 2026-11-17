@@ -1,0 +1,29 @@
+#!/bin/sh
+# uc <minimal|standard|strict> [claude args...]
+# Starts Claude Code with the settings file of the chosen uc-core profile.
+set -eu
+
+usage() {
+  echo "Usage: uc <minimal|standard|strict> [claude args...]" >&2
+  exit 1
+}
+
+[ "$#" -ge 1 ] || usage
+case "$1" in
+  minimal|standard|strict) profile="$1" ;;
+  *) usage ;;
+esac
+shift
+
+# Follow symlinks so the launcher also works when linked into a directory on PATH.
+self="$0"
+while [ -L "$self" ]; do
+  target="$(readlink "$self")"
+  case "$target" in
+    /*) self="$target" ;;
+    *) self="$(dirname "$self")/$target" ;;
+  esac
+done
+root="$(cd "$(dirname "$self")/.." && pwd -P)"
+
+exec claude --settings "$root/plugins/uc-core/profiles/$profile.json" "$@"
