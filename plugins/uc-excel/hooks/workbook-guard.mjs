@@ -62,6 +62,18 @@ function segments(tokens) {
   return out.filter((s) => s.length);
 }
 
+const COPY_ITEM = new Set(['copy-item', 'copy', 'cpi']);
+
+/** A copy writes only its destination: the file itself, or each workbook source's name inside a destination folder. */
+function copyTargets(sources, dest) {
+  if (WORKBOOK.test(dest)) return [dest];
+  return workbooks(sources).map((src) => {
+    const base = path.basename(src.replace(/\\/g, '/'));
+    if (/[\\/]$/.test(dest)) return dest + base;
+    return dest.includes('\\') ? `${dest}\\${base}` : path.join(dest, base);
+  });
+}
+
 const isAbsolutePath = (p) => path.isAbsolute(p) || /^[A-Za-z]:[\\/]|^\\\\/.test(p);
 const workbooks = (list) => list.filter((w) => WORKBOOK.test(w));
 
@@ -85,11 +97,21 @@ function segmentTargets(seg) {
   if (cmd === 'git' && GIT_READ_ONLY.has(args.find((a) => !a.startsWith('-')))) return { targets: redirected };
   if (cmd === 'cp' || cmd === 'rsync') {
     const operands = args.filter((a) => !a.startsWith('-'));
-    const dest = operands.at(-1) ?? '';
-    if (WORKBOOK.test(dest)) return { targets: [dest, ...redirected] };
-    // Destination is a directory: each workbook source lands there under its own name.
-    const into = workbooks(operands.slice(0, -1)).map((src) => path.join(dest, path.basename(src.replace(/\\/g, '/'))));
-    return { targets: [...into, ...redirected] };
+    return { targets: [...copyTargets(operands.slice(0, -1), operands.at(-1) ?? ''), ...redirected] };
+  }
+  if (COPY_ITEM.has(cmd.toLowerCase())) {
+    // PowerShell Copy-Item: the source is only read; -Destination (or the second positional argument) is written.
+    const sources = [];
+    const positional = [];
+    let dest = null;
+    for (let i = 0; i < args.length; i++) {
+      if (/^-(destination|dest)$/i.test(args[i])) dest = args[++i] ?? '';
+      else if (/^-(path|literalpath|lp|pspath)$/i.test(args[i])) sources.push(...(args[++i] ?? '').split(','));
+      else if (!args[i].startsWith('-')) positional.push(args[i]);
+    }
+    if (sources.length === 0 && positional.length) sources.push(positional.shift());
+    if (dest === null) dest = positional.shift() ?? '';
+    return { targets: [...copyTargets(sources, dest), ...redirected] };
   }
   const embedded = args.filter((a) => !WORKBOOK.test(a)).flatMap((a) => a.match(EMBEDDED) ?? []);
   return { targets: [...workbooks(args), ...embedded, ...redirected] };
