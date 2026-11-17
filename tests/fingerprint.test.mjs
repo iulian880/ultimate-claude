@@ -82,3 +82,20 @@ test('it leaves no objects in the repository (audit 2026-11-18)', () => {
   assert.ok(treeFingerprint(dir));
   assert.equal(count(), before);
 });
+
+test('a repository path with a colon gives the same tree as git itself', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'uc fp col:on '));
+  const git = (...a) => execFileSync('git', ['-C', dir, ...a], { stdio: 'pipe' }).toString().trim();
+  git('init', '-q', '-b', 'main');
+  git('config', 'user.email', 'test@example.invalid');
+  git('config', 'user.name', 'test');
+  fs.writeFileSync(path.join(dir, 'a.txt'), 'one\n');
+  git('add', '-A');
+  git('commit', '-q', '-m', 'init');
+  assert.equal(treeFingerprint(dir), git('rev-parse', 'HEAD^{tree}'));
+  fs.writeFileSync(path.join(dir, 'b.txt'), 'two\n');
+  const fp = treeFingerprint(dir);
+  git('add', '-A');
+  git('commit', '-q', '-m', 'two');
+  assert.equal(fp, git('rev-parse', 'HEAD^{tree}'));
+});

@@ -40,7 +40,9 @@ and if neither sets it, the profile is STANDARD.
 
 - **For this session:** the user starts a prompt with `profil strict` (or `profile strict`, `uc profile minimal`,
   and so on). The words must be the first words of the prompt. A hook stores the choice and confirms with
-  "UC profile for this session is now STRICT.". You cannot switch the profile yourself: when the user asks
+  "UC profile for this session is now STRICT.". If the first line ends with "?" (a question about a profile), nothing
+  is switched unless the name is followed by a period or a colon: `profil strict. Why is the gate blocking?`.
+  You cannot switch the profile yourself: when the user asks
   for a switch in the middle of a sentence, ask them to send `profil <name>` as its own prompt.
 - **For a project:** add this to the project's `.claude/settings.json`, then start a new session:
 
@@ -55,10 +57,13 @@ and if neither sets it, the profile is STANDARD.
 
 - When the session enters STRICT, a hook records a fingerprint of the code (in a git project: everything git would
   commit, excluding `.uc/` folders, `.claude/agent-memory/`, design documents - `docs/superpowers/`, `docs/specs/`,
-  `docs/plans/`, `docs/adr/`, `GLOSSARY.md` - and worktree folders). Edits made with any tool, Bash and scripts
-  included, change it. The gate checks the main folder and every worktree the session worked in, so plans executed
-  in a Superpowers worktree are covered; worktrees of other sessions are left alone. If the session already edited files before it switched to STRICT, the start is unknown and any stop
-  needs a PASS. Bash-only edits made before the switch are not seen: start the session in STRICT to cover them.
+  `docs/plans/`, `docs/adr/`, `GLOSSARY.md`, `GLOSSARY-MAP.md` - and worktree folders). Edits made with any tool,
+  Bash and scripts included, change it. If the session already edited files before it switched to STRICT, the start
+  is unknown and any stop needs a PASS. Bash-only edits made before the switch are not seen: start the session in
+  STRICT to cover them.
+- The gate also checks the worktrees of this repository that the session stopped in or edited, so plans executed in
+  a Superpowers worktree are covered. A worktree created during the session counts from the main folder's state; one
+  that already existed counts from the state the session first found it in. Other repositories are left alone.
 - The `release-gate` agent writes its proof to `.uc/verification/<timestamp>.json` in the project root. It counts
   only when complete: PASS, every check passed, at least one criterion and all VERIFIED, nothing left unverified,
   the same fingerprint before and after the checks, and that fingerprint equal to the current code.

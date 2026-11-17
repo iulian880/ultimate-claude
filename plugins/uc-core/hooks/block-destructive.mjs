@@ -17,7 +17,7 @@ function isRmRf(segment) {
 
 /** The git subcommand of a segment and its arguments, skipping options such as `-C dir` before it. */
 function gitCall(segment) {
-  const m = /(?:^|[^\w-])git((?:\s+-[Cc]\s+\S+|\s+--?[\w-]+(?:=\S+)?)*)\s+([a-z][\w-]*)\b(.*)$/s.exec(segment);
+  const m = /(?:^|[^\w-])git((?:\s+-[Cc]\s+\S+|\s+--(?:work-tree|git-dir|namespace)\s+\S+|\s+--?[\w-]+(?:=\S+)?)*)\s+([a-z][\w-]*)\b(.*)$/s.exec(segment);
   return m ? { sub: m[2], args: tokens(m[3]) } : null;
 }
 
@@ -32,6 +32,10 @@ function isGitForcePush(segment) {
   return tokens(m[1]).some((a) => a === '--force' || shortGroup('f').test(a) || /^\+[\w.\/-]/.test(a));
 }
 
+// PowerShell accepts any unambiguous prefix of a parameter name: -r, -rec, -Recurse, -Recurse:$true.
+const PS_RECURSE = /^-r(?:e(?:c(?:u(?:r(?:s(?:e)?)?)?)?)?)?(?::\$?true)?$/i;
+const PS_WHATIF = /^-wh?(?:a(?:t(?:i(?:f)?)?)?)?$/i;
+
 const WHOLE_TREE = new Set(['.', './', ':/', '*', ':(top)', ':/*']);
 
 /** git clean -f, checkout/restore of the whole tree, checkout -f, stash drop/clear, branch -D. */
@@ -45,6 +49,8 @@ function isGitDiscard(segment) {
       && !args.some((a) => a === '--dry-run' || shortGroup('n').test(a));
   }
   if (sub === 'checkout') return has('-f', '--force') || args.some((a) => WHOLE_TREE.has(a));
+  if (sub === 'switch') return has('-f', '--force', '--discard-changes');
+  if (sub === 'worktree') return args[0] === 'remove' && has('-f', '--force');
   if (sub === 'restore') {
     const stagedOnly = has('--staged', '-S') && !has('--worktree', '-W');
     return !stagedOnly && args.some((a) => WHOLE_TREE.has(a));
@@ -66,12 +72,10 @@ function isGitRemoteDelete(segment) {
 }
 
 function isRemoveItemRecurseForce(segment) {
-  return /(?:^|[^\w-])remove-item\b/i.test(segment) && /\s-recurse\b/i.test(segment) && /\s-force\b/i.test(segment);
+  return /(?:^|[^\w-])remove-item\b/i.test(segment) && /\s-recurse\b/i.test(segment) && /\s-force\b/i.test(segment)
+    && !tokens(segment).some((a) => PS_WHATIF.test(a));
 }
 
-// PowerShell accepts any unambiguous prefix of a parameter name: -r, -rec, -Recurse, -Recurse:$true.
-const PS_RECURSE = /^-r(?:e(?:c(?:u(?:r(?:s(?:e)?)?)?)?)?)?(?::\$?true)?$/i;
-const PS_WHATIF = /^-wh?(?:a(?:t(?:i(?:f)?)?)?)?$/i;
 
 /**
  * Remove-Item and its aliases with -Recurse in any short form. Remove-Item, ri, del and erase are PowerShell only;
@@ -108,46 +112,75 @@ const RULES = [
   ['del /s', isDelS],
 ];
 
-/** Splits on ; & | and newlines that are outside quotes. */
-function splitSegments(command) {
+/**
+ * Reads a command the way bash quotes it: a backslash escapes the next character outside single quotes (PowerShell
+ * keeps it, it is a path separator there), and separators inside quotes do not split. Returns the segments, each as
+ * its text and the quoted strings in it.
+ */
+function scan(command, powershell) {
   const segments = [];
-  let current = '';
+  let text = '';
+  let quoted = [];
   let quote = null;
-  for (const ch of command) {
-    if (quote) {
-      if (ch === quote) quote = null;
-      current += ch;
+  let inner = '';
+  const close = () => { segments.push({ text, quoted }); text = ''; quoted = []; };
+  for (let i = 0; i < command.length; i++) {
+    const ch = command[i];
+    if (quote === "'") {
+      text += ch;
+      if (ch === "'") { quote = null; quoted.push(inner); } else inner += ch;
+    } else if (ch === '\\' && !powershell && i + 1 < command.length) {
+      const next = command[++i];
+      text += ch + next;
+      if (quote === '"') inner += next;
+    } else if (quote === '"') {
+      text += ch;
+      if (ch === '"') { quote = null; quoted.push(inner); } else inner += ch;
     } else if (ch === '"' || ch === "'") {
       quote = ch;
-      current += ch;
+      inner = '';
+      text += ch;
     } else if (/[;&|\r\n]/.test(ch)) {
-      segments.push(current);
-      current = '';
+      close();
     } else {
-      current += ch;
+      text += ch;
     }
   }
-  segments.push(current);
+  close();
   return segments;
 }
 
 // Commands whose quoted arguments are text (a message, a search pattern), not code that runs.
 const TEXT_COMMANDS = /^\s*(?:(?:echo|printf|grep|egrep|fgrep|rg|ag)\b|git\s+(?:-C\s+\S+\s+)?(?:commit|log|tag|notes|grep|show)\b)/;
+// Output piped into a shell or eval runs as code, so text commands in such a line are not harmless.
+const PIPE_TO_SHELL = /\|\s*(?:sudo\s+)?(?:\S*[\\/])?(?:sh|bash|zsh|dash|ksh|fish|pwsh|powershell|eval|source|xargs|iex|invoke-expression)\b/i;
 
-/** Empties quoted text in commands that only print or search it, unless it runs something ($( ) or backticks). */
+/** Empties the quoted text of a command that only prints or searches it, unless it runs something. */
 function withoutQuotedText(segment) {
-  if (!TEXT_COMMANDS.test(segment)) return segment;
-  return segment.replace(/"[^"]*"|'[^']*'/g, (q) => (/\$\(|`/.test(q) ? q : '""'));
+  if (!TEXT_COMMANDS.test(segment.text)) return segment.text;
+  let out = segment.text;
+  for (const q of segment.quoted) {
+    if (!/\$\(|`/.test(q)) out = out.replace(q, '');
+  }
+  return out;
 }
 
 /** Returns the label of the first destructive rule the command matches, or null. */
-export function findDestructive(command, { powershell = false } = {}) {
+export function findDestructive(command, { powershell = false } = {}, depth = 0) {
   if (typeof command !== 'string') return null;
+  const runsText = PIPE_TO_SHELL.test(command);
   // Flags only count inside the same simple command, so split on shell separators first.
-  for (const raw of splitSegments(command)) {
-    const segment = withoutQuotedText(raw);
+  for (const segment of scan(command, powershell)) {
+    const text = runsText ? segment.text : withoutQuotedText(segment);
     for (const [label, matches] of RULES) {
-      if (matches(segment, powershell)) return label;
+      if (matches(text, powershell)) return label;
+    }
+    // A quoted string may be a script that runs (bash -c "...", eval '...', ssh host "..."): check it on its own.
+    if (depth < 3 && (runsText || !TEXT_COMMANDS.test(segment.text))) {
+      for (const q of segment.quoted) {
+        const label = findDestructive(q, { powershell }, depth + 1);
+        if (label) return label;
+      }
     }
   }
   return null;

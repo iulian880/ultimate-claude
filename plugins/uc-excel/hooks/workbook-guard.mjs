@@ -86,7 +86,12 @@ const isAbsolutePath = (p) => path.isAbsolute(p) || /^[A-Za-z]:[\\/]|^\\\\/.test
 const workbooks = (list) => list.filter((w) => WORKBOOK.test(w));
 
 // under(dir, pattern) builds a recursive target: every file below dir whose name matches (see expand).
-const under = (dir, pattern = '*') => `${dir.replace(/[\\/]+$/, '') || '.'}/**/${pattern}`;
+const under = (dir, pattern = '*') => {
+  const trimmed = dir.replace(/[\\/]+$/, '');
+  return `${trimmed || (dir ? dir[0] : '.')}/**/${pattern}`;
+};
+// A -name pattern can match a workbook only if it ends in a wildcard or in a workbook extension.
+const canBeWorkbook = (pattern) => /[*?\]]$/.test(pattern) || WORKBOOK.test(pattern);
 
 /** find writes only with -delete or -exec/-execdir: then every match under its start folders is a target. */
 function findTargets(args) {
@@ -94,7 +99,8 @@ function findTargets(args) {
   const first = args.findIndex((a) => a.startsWith('-') || a === '(' || a === '!');
   const roots = (first === -1 ? args : args.slice(0, first));
   const patterns = args.flatMap((a, i) => (['-name', '-iname'].includes(a) && args[i + 1] ? [args[i + 1]] : []));
-  return (roots.length ? roots : ['.']).flatMap((r) => (patterns.length ? patterns : ['*']).map((p) => under(r, p)));
+  const reachable = patterns.length ? patterns.filter(canBeWorkbook) : ['*'];
+  return (roots.length ? roots : ['.']).flatMap((r) => reachable.map((p) => under(r, p)));
 }
 
 /** Returns {cd} for a `cd` segment, otherwise {targets} written by the segment (paths as written). */
@@ -173,18 +179,27 @@ export function workbookTargets(toolName, toolInput = {}, { readOnly = readOnlyT
 const globRe = (pattern) =>
   new RegExp(`^${pattern.replace(/[.+^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*').replace(/\?/g, '.')}$`, 'i');
 
-/** Every file under dir, skipping git and dependency folders. */
-function walk(dir, depth = 0) {
+const WALK_LIMIT = 100000;
+
+/**
+ * Files under dir whose name matches re, skipping git and dependency folders. Symlinks are not followed. Past
+ * WALK_LIMIT entries it throws: the hook then blocks in STRICT and warns elsewhere instead of guessing.
+ */
+function walk(dir, re, seen = { n: 0 }, depth = 0) {
   let entries;
   try {
     entries = fs.readdirSync(dir, { withFileTypes: true });
   } catch {
     return [];
   }
+  seen.n += entries.length;
+  if (seen.n > WALK_LIMIT) throw new Error(`more than ${WALK_LIMIT} files under the search folder`);
   return entries.flatMap((e) => {
     const full = path.join(dir, e.name);
-    if (e.isDirectory()) return depth < 20 && !['.git', 'node_modules', '.venv'].includes(e.name) ? walk(full, depth + 1) : [];
-    return [full];
+    if (e.isDirectory()) {
+      return depth < 20 && !['.git', 'node_modules', '.venv'].includes(e.name) ? walk(full, re, seen, depth + 1) : [];
+    }
+    return re.test(e.name) && WORKBOOK.test(e.name) ? [full] : [];
   });
 }
 
@@ -195,8 +210,7 @@ function walk(dir, depth = 0) {
 function expand(target, cwd) {
   const recursive = target.split(/[\\/]\*\*[\\/]/);
   if (recursive.length === 2) {
-    const re = globRe(recursive[1]);
-    return walk(path.resolve(cwd, recursive[0])).filter((f) => re.test(path.basename(f)));
+    return walk(path.resolve(cwd, recursive[0]), globRe(recursive[1]));
   }
   if (!/[*?]/.test(path.basename(target))) return [path.resolve(cwd, target)];
   const dir = path.resolve(cwd, path.dirname(target));
