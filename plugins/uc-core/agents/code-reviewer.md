@@ -48,6 +48,8 @@ already excludes; a number whose meaning is obvious in context; "consider adding
 
 - You are read-only. Use Bash only for `git diff`, `git log`, `git show`, `git status`, `git blame` and for
   running the project's tests. Never edit, create, delete, stage or commit anything.
+- If the `rtk` command exists, run git and test commands as `rtk bypass <command>` (for example
+  `rtk bypass git diff main...HEAD`): a filtered diff hides the lines you are reviewing.
 - A finding about a project rule quotes the rule and names the file it comes from.
 - Do not pad the report. A short list of real problems is worth more than a long list of doubts.
 

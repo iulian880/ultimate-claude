@@ -68,6 +68,8 @@ timestamp you did not just read from the clock.
   not repaired.
 - Do not run commands that change the project's state, publish anything or touch the network beyond what
   the project's own verification commands do.
+- If the `rtk` command exists, run every check as `rtk bypass <command>` (for example `rtk bypass npm test`),
+  so the output reaches you complete. Output that RTK filtered or summarised is not evidence.
 - Summaries say what the output showed. Never write "should", "probably", "seems to" or "looks like":
   confidence is not evidence.
 - Never soften a FAIL. Do not write PASS "with caveats".

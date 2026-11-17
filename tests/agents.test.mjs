@@ -90,6 +90,12 @@ test('qa-engineer names the break, checks mutations, reruns new tests and scores
   }
 });
 
+test('agents that read diffs or test output bypass RTK filtering', () => {
+  for (const name of ['code-reviewer', 'qa-engineer', 'release-gate']) {
+    assert.match(read(name), /`rtk bypass <command>`/, name);
+  }
+});
+
 test('lintPlugin reports no problems for uc-core', () => {
   assert.deepEqual(lintPlugin(pluginDir), []);
 });

@@ -144,7 +144,7 @@ sub 35 de linii, propus de installer și aplicat doar cu acord. Un plugin nu poa
 | gstack | nu se instalează (suport Windows minimal) | — |
 | Impeccable | nu acum (se suprapune cu Frontend Design; Windows neconfirmat) | reevaluare ulterioară |
 | Superdesign, Serena, GitNexus, Rubberduck | respinse | — |
-| RTK | **scos** de pe Mac (decizia din brief) | — |
+| RTK | **păstrat** pentru economia de tokeni pe planul Pro, cu ocolire la verificare: `code-reviewer`, `qa-engineer` și `release-gate` rulează comenzile cu `rtk bypass`, ca să vadă ieșirea completă (decizia utilizatorului, 17.11.2026; înlocuiește „scos” din brief) | global, doar pe Mac |
 | pluginurile `headroom` și `code-graph` de pe Mac | de auditat în faza de migrare; propunerea mea: scoase (compresor, respectiv al doilea graf) | — |
 
 ## 6. Cine deține fiecare etapă
@@ -224,7 +224,7 @@ dată cu mesajul „rulează release-gate"; a doua oprire trece (fără bucle) �
 
 ## 9. Migrarea Mac-ului (v3 → V2)
 
-Cu backup și acord pe fiecare punct: scoaterea RTK (linia `@RTK.md`, hook, binar), rescrierea `~/.claude/CLAUDE.md`
+Cu backup și acord pe fiecare punct: RTK rămâne (vezi §5.5), rescrierea `~/.claude/CLAUDE.md`
 (dispare „Do not create custom subagents"), mutarea `block-destructive` în `uc-core`, înlocuirea Playwright MCP cu CLI,
 auditul pluginurilor instalate dar fără proprietar în §6 (`headroom`, `code-graph`, `engineering`, `design`, `data`,
 `productivity`, `datarobot`, `firecrawl`), marcarea `SETUP-SPEC.md` ca înlocuit, actualizarea `PLAYBOOK.md` și

@@ -47,6 +47,8 @@ The change or the feature to cover, and the spec or the acceptance criteria when
 - Do not weaken, skip or delete an existing test to make the suite pass.
 - Do not test implementation details that a harmless refactor would break.
 - Never report a result you did not get from running a command.
+- If the `rtk` command exists, run the suite and every test as `rtk bypass <command>` (for example
+  `rtk bypass npm test`), so failures and counts reach you complete. Filtered output is not a result.
 
 ## What you return
 

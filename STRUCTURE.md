@@ -113,7 +113,7 @@ Files written outside the repo at runtime (never committed):
 | # | Plan | Delivers | Depends on |
 |---|---|---|---|
 | 1 | uc-core | repo, linter, 4 agents, 4 skills, 4 hook scripts, profiles, lockfile, ADRs | — |
-| 2 | Migration of the existing setup (v3 → V2) | old global rules, RTK and duplicate hooks removed with consent; new global `CLAUDE.md` block; plugin audit | 1 |
+| 2 | Migration of the existing setup (v3 → V2) | old global rules and duplicate hooks removed with consent (RTK stays, bypassed by the verifying agents); new global `CLAUDE.md` block; plugin audit | 1 |
 | 3 | uc-web | frontend-reviewer, database-reviewer, `ui-improve`, web-app template; Playwright CLI, UI UX Pro Max, Frontend Design wired in | 1 |
 | 4 | uc-excel | excel-vba-reviewer, `vba-workflow`, `workbook-guard`, template; xlflow vs xlwings spike | 1, Windows 11 + Excel 64-bit |
 | 5 | Installer | detect / preview / backup / apply / verify / uninstall / rollback; CI on macOS and Windows | 1–4 |
