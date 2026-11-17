@@ -1,5 +1,7 @@
 // Reads the verification proofs written by the release-gate agent.
-// Schema: {"verdict": "PASS"|"FAIL", "at": "<ISO 8601>", "checks": [{command, exitCode, summary}], "unverified": [string]}
+// Schema: {"verdict": "PASS"|"FAIL", "at": "<ISO 8601>", "checks": [{command, exitCode, summary}],
+//          "criteria": [{criterion, status: "VERIFIED"|"FAILED"|"NOT PERFORMED", checks: [index]}], "unverified": [string]}
+// Only `verdict` and `at` are read here; the other keys are for people auditing the result.
 import fs from 'node:fs';
 import path from 'node:path';
 

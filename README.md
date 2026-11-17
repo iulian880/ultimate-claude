@@ -32,6 +32,20 @@ Try it without installing: `claude --plugin-dir "/path/to/ultimate-claude/plugin
 (or `profile strict`), per project with `env.UC_PROFILE` in `.claude/settings.local.json`, or from a terminal with
 `bin/uc strict`. See the `uc-profile` skill.
 
+## Credits
+
+The `uc-core` agents are our own text. Some techniques in them were adapted, not copied, from these projects:
+
+- [anthropics/claude-plugins-official](https://github.com/anthropics/claude-plugins-official) (Apache-2.0):
+  confidence threshold and project-rule checks in code review (`code-review`, `pr-review-toolkit`), file:line
+  evidence and the implementation blueprint (`feature-dev`), criticality scores for test gaps.
+- [obra/superpowers](https://github.com/obra/superpowers) (MIT): naming the failure a test catches, expected
+  values worked out by hand, the mutation check, banned hedging words in verification.
+- [affaan-m/everything-claude-code](https://github.com/affaan-m/everything-claude-code) (MIT): the pre-report
+  gate and the false-positive list in review, baseline checks and next steps in verification, flaky-test reruns.
+- [mattpocock/skills](https://github.com/mattpocock/skills) (MIT): distinct design constraints per candidate,
+  the deletion test, dependency classes and the three-part ADR test.
+
 ## Develop
 
 ```bash
