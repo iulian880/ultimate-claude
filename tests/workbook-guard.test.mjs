@@ -204,3 +204,24 @@ test('more read-only commands are not targets; git commands that overwrite still
   assert.deepEqual(bash('git checkout -- a.xlsm'), ['a.xlsm']);
   assert.deepEqual(bash('git restore a.xlsm'), ['a.xlsm']);
 });
+
+test('PowerShell Copy-Item: only the destination is written, positional or named', () => {
+  const ps = (command) => workbookTargets('PowerShell', { command });
+  assert.deepEqual(ps('Copy-Item a.xlsm backups/a.20261117-150000.xlsm'), ['backups/a.20261117-150000.xlsm']);
+  assert.deepEqual(ps('Copy-Item -Path a.xlsm -Destination out.xlsm'), ['out.xlsm']);
+  assert.deepEqual(ps('Copy-Item -Destination "x y.xlsm" -LiteralPath a.xlsm'), ['x y.xlsm']);
+  assert.deepEqual(ps('copy a.xlsm livrabile\\'), ['livrabile\\a.xlsm']);
+  assert.deepEqual(ps('Move-Item a.xlsm b.xlsm'), ['a.xlsm', 'b.xlsm']);
+});
+
+test('CLI strict PowerShell: the backup copy passes, overwriting an existing workbook does not', () => {
+  const base = tmp('uc wb cfg ');
+  const proj = tmp('uc wb ps ');
+  updateSession('ps', { startedAt: new Date(Date.now() - 60_000).toISOString() }, { CLAUDE_CONFIG_DIR: base });
+  fs.writeFileSync(path.join(proj, 'a.xlsm'), 'x');
+  fs.writeFileSync(path.join(proj, 'b.xlsm'), 'y');
+  const ps = (command) => runGuard({ session_id: 'ps', cwd: proj, tool_name: 'PowerShell', tool_input: { command } },
+    { profile: 'strict', base });
+  assert.equal(ps('Copy-Item -Path a.xlsm -Destination backups\\a.20261117-150000.xlsm').status, 0);
+  assert.equal(ps('Copy-Item a.xlsm b.xlsm').status, 2);
+});
