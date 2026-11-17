@@ -78,6 +78,7 @@ function runGuard(input, { profile, base }) {
 test('CLI: strict blocks without backup, passes with fresh backup; standard warns and exits 0', () => {
   const base = tmp('uc wb cfg ');
   const proj = tmp('uc wb cli ');
+  fs.writeFileSync(path.join(proj, 'Robot SAP v3.xlsm'), 'x');
   const started = new Date(Date.now() - 60_000).toISOString();
   updateSession('wb', { startedAt: started }, { CLAUDE_CONFIG_DIR: base });
   const input = { session_id: 'wb', cwd: proj, tool_name: 'Bash', tool_input: { command: 'cp a.xlsm "Robot SAP v3.xlsm"' } };
@@ -130,4 +131,19 @@ test('hooks.json wires SessionStart and the PreToolUse guard to existing scripts
     const m = /\$\{CLAUDE_PLUGIN_ROOT\}\/(hooks\/[\w-]+\.mjs)/.exec(groups[0].hooks[0].command);
     assert.ok(m && fs.existsSync(path.join(root, 'plugins', 'uc-excel', m[1])));
   }
+});
+
+test('CLI strict: writing the backup itself and creating a new workbook need no backup', () => {
+  const base = tmp('uc wb cfg ');
+  const proj = tmp('uc wb new ');
+  updateSession('nb', { startedAt: new Date(Date.now() - 60_000).toISOString() }, { CLAUDE_CONFIG_DIR: base });
+  fs.writeFileSync(path.join(proj, 'Book 1.xlsm'), 'x');
+  const call = (command) => runGuard({ session_id: 'nb', cwd: proj, tool_name: 'Bash', tool_input: { command } },
+    { profile: 'strict', base });
+  assert.equal(call('mkdir -p backups && cp -p "Book 1.xlsm" "backups/Book 1.20261117-150000.xlsm"').status, 0);
+  assert.equal(call('cp template.xlsm "Brand New.xlsm"').status, 0);
+  assert.equal(call('cp template.xlsm "Book 1.xlsm"').status, 2);
+  const write = runGuard({ session_id: 'nb', cwd: proj, tool_name: 'Write', tool_input: { file_path: path.join(proj, 'Book 1.xlsm') } },
+    { profile: 'strict', base });
+  assert.equal(write.status, 2);
 });
