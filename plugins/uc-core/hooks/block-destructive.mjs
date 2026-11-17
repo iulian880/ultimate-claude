@@ -1,9 +1,7 @@
 #!/usr/bin/env node
 // PreToolUse hook (Bash, PowerShell): blocks destructive commands that a text deny rule can miss.
 // Exit 2 blocks the tool call; stderr goes back to Claude. Fails closed on unreadable input.
-import fs from 'node:fs';
-import { pathToFileURL } from 'node:url';
-import { runHook } from './lib/hook-io.mjs';
+import { isMain, runHook } from './lib/hook-io.mjs';
 
 const tokens = (text) => text.split(/\s+/).map((t) => t.replace(/^["']+|["']+$/g, '')).filter(Boolean);
 
@@ -67,12 +65,4 @@ export function handle(input) {
   return { exit: 0 };
 }
 
-function isMain() {
-  try {
-    return import.meta.url === pathToFileURL(fs.realpathSync(process.argv[1])).href;
-  } catch {
-    return false;
-  }
-}
-
-if (isMain()) await runHook(handle, { failClosed: true });
+if (isMain(import.meta.url)) await runHook(handle, { failClosed: true });
