@@ -25,6 +25,18 @@ test('execution is chosen by uc-core rules and the user choice wins', () => {
   assert.ok(!text().includes('only when the user asks'));
 });
 
+test('the executor pick is shown at plan review and work starts after the user confirms', () => {
+  assert.ok(text().includes('start after the user confirms'));
+  assert.ok(!text().includes('and start:'));
+});
+
+test('conformance review and architect have a fixed place in the flow', () => {
+  const standard = lines().find((l) => l.startsWith('| STANDARD'));
+  const strict = lines().find((l) => l.startsWith('| STRICT'));
+  assert.ok(standard.includes('before finishing the branch'), standard);
+  assert.ok(strict.includes('between brainstorming and writing-plans'), strict);
+});
+
 test('reviews are split between Superpowers and uc-core conformance', () => {
   const standard = lines().find((l) => l.startsWith('| STANDARD'));
   assert.ok(standard.includes('Superpowers reviews'), standard);

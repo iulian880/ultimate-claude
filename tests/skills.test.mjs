@@ -49,6 +49,8 @@ test('uc-profile table matches the global block: execution per plan, reviews spl
   const rows = read('uc-profile').split('\n');
   assert.ok(rows.find((r) => r.startsWith('| Process')).includes('chosen per plan'));
   assert.ok(rows.find((r) => r.startsWith('| Review')).includes('Superpowers reviews'));
+  assert.ok(rows.find((r) => r.startsWith('| Review')).includes('before finishing the branch'));
+  assert.ok(rows.find((r) => r.startsWith('| Process')).includes('between brainstorming and writing-plans'));
 });
 
 test('delivery-report carries the Superpowers rulings and deferred minors', () => {

@@ -11,16 +11,16 @@
 | Profile | When | Process | Review |
 |---|---|---|---|
 | MINIMAL | typo, rename, a fix inside one function | do it directly, then one check | none |
-| STANDARD | everyday development | Superpowers: brainstorming, writing-plans, execution chosen per plan, verification | Superpowers reviews, `code-reviewer` (conformance) |
-| STRICT | critical systems, migrations, important VBA, security, data | STANDARD + `architect` (ADR) + `qa-engineer` | STANDARD + `/security-review`, domain reviewer, `release-gate` |
+| STANDARD | everyday development | Superpowers: brainstorming, writing-plans, execution chosen per plan, verification | Superpowers reviews, then `code-reviewer` (conformance) before finishing the branch |
+| STRICT | critical systems, migrations, important VBA, security, data | STANDARD + `architect` (ADR) between brainstorming and writing-plans + `qa-engineer` | STANDARD + `/security-review`, domain reviewer, `release-gate` |
 - Work that fits the MINIMAL row is done directly whatever the session profile: no brainstorming or plan, then one
   check. This overrides the Superpowers "skill first" rule.
 - Switch for one session by starting a prompt with `profil <name>`.
 - Where uc-core is not enabled: no profile hooks; review with Superpowers requesting-code-review; say what is missing.
 
 ## Execution (uc-core decides, Superpowers runs it)
-- After writing-plans, pick the executor, state it with one reason and start: this is the execution method
-  already supplied. The user's explicit choice wins. Subagents never use a pricier model than the session.
+- After writing-plans, pick the executor and give it with one reason when asking for plan review (the method already
+  supplied); start after the user confirms. The user's explicit choice wins. Subagents never use a pricier model.
 - subagent-driven-development: 4+ mostly independent tasks AND (STRICT, a long plan, or costly mistakes).
 - executing-plans (inline): otherwise, and always for coupled tasks or steps that need the user's yes or
   touch files outside the repo. On the Pro plan, ties go to inline.

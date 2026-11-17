@@ -14,8 +14,8 @@ not turn plugins on or off.
 | | MINIMAL | STANDARD (default) | STRICT |
 |---|---|---|---|
 | When | typo, rename, a bug fix inside one function | everyday development | critical systems, migrations, important VBA, security, data |
-| Process | do it directly, then one check | brainstorm -> plan -> execution chosen per plan -> verify | STANDARD + `architect` agent and an ADR, a persistent plan, `qa-engineer` agent |
-| Review | none | Superpowers reviews, then the `code-reviewer` conformance review | STANDARD + `/security-review` + the domain reviewer + `release-gate` agent |
+| Process | do it directly, then one check | brainstorm -> plan -> execution chosen per plan -> verify | STANDARD + `architect` agent and an ADR between brainstorming and writing-plans, a persistent plan, `qa-engineer` agent |
+| Review | none | Superpowers reviews, then the `code-reviewer` conformance review before finishing the branch | STANDARD + `/security-review` + the domain reviewer + `release-gate` agent |
 | Enforced by hooks | `block-destructive` | `block-destructive` | `block-destructive` + the verification gate |
 
 The process and review rows are guidance that you follow. Only the last row is enforced by hooks.
