@@ -12,6 +12,11 @@
       "name": "uc-core",
       "source": "./plugins/uc-core",
       "description": "Engineering-team core: architect, code-reviewer, qa-engineer and release-gate agents, complexity and delivery skills, guard hooks and MINIMAL/STANDARD/STRICT profiles."
+    },
+    {
+      "name": "uc-excel",
+      "source": "./plugins/uc-excel",
+      "description": "Excel/VBA projects developed as text: VBA reviewer, fixed lint-build-compile-test workflow, backup guard for workbooks. Enable per Excel project."
     }
   ]
 }

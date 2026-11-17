@@ -1,0 +1,12 @@
+{
+  "name": "uc-excel",
+  "version": "0.1.0",
+  "description": "Excel/VBA projects developed as text: a VBA-specific reviewer, a fixed lint-build-compile-test workflow and a guard that requires a backup before any workbook write.",
+  "author": {
+    "name": "ultimate-claude"
+  },
+  "license": "UNLICENSED",
+  "dependencies": [
+    "uc-core"
+  ]
+}
