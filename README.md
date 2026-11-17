@@ -19,6 +19,11 @@ claude plugin marketplace add "/path/to/ultimate-claude"
 claude plugin install uc-core@ultimate-claude --scope project
 ```
 
+`uc-core` declares `security-guidance@claude-plugins-official` as a dependency, so installing `uc-core` in a
+project also installs and enables `security-guidance` there, and nowhere else. Its LLM reviews (on every stop
+and every commit) run on Opus with your account; set `ENABLE_CODE_SECURITY_REVIEW=0` in a project's
+`env` to keep only its free pattern warnings.
+
 Try it without installing: `claude --plugin-dir "/path/to/ultimate-claude/plugins/uc-core"`.
 
 ## Profiles

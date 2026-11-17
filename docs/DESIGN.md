@@ -132,7 +132,7 @@ sub 35 de linii, propus de installer și aplicat doar cu acord. Un plugin nu poa
 | mattpocock/skills (cele 4–5 deja instalate) | păstrat, vocabular de arhitectură + ADR | global |
 | Context7 — CLI `ctx7` + skill, fără MCP | păstrat | global |
 | Pluginuri LSP native (TypeScript, Python, C#) | păstrat, prima alegere pentru navigare | global |
-| security-guidance | păstrat | global |
+| security-guidance | păstrat; dependență declarată a `uc-core` (decizia utilizatorului, 17.11.2026), pentru că review-urile lui Opus consumă din plan | doar unde e activ `uc-core` |
 | Frontend Design (Anthropic) | păstrat | proiecte web |
 | UI UX Pro Max v2.15.0 | păstrat, la cerere | skill local în proiectele cu interfață |
 | Playwright CLI | **înlocuiește** Playwright MCP | proiecte web |

@@ -5,5 +5,8 @@
   "author": {
     "name": "ultimate-claude"
   },
-  "license": "UNLICENSED"
+  "license": "UNLICENSED",
+  "dependencies": [
+    "security-guidance@claude-plugins-official"
+  ]
 }
