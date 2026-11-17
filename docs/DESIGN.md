@@ -133,14 +133,21 @@ Un test slăbit ca să treacă. Două fișiere de documentație care spun acela�
   bucle pe celule în loc de tablouri; `Select`/`Activate`); tratarea erorilor și revenirea (`On Error` fără resetare,
   starea Excel nerestaurată pe calea de eroare, erori înghițite); integritatea datelor (scrieri parțiale, tipuri, date și
   numere dependente de setările regionale, celule goale); Excel Object Model (referințe necalificate la
-  `ActiveSheet`/`ActiveWorkbook`, evenimente, obiecte neeliberate). Același format de raport, prag de încredere și
-  verdict ca `code-reviewer` din `uc-core`. Scris de noi: nu există unul public bun.
+  `ActiveSheet`/`ActiveWorkbook`, evenimente, obiecte neeliberate). Rulează la orice schimbare de cod VBA, în orice
+  profil, pe modelul sesiunii. Verifică doar aceste categorii specifice VBA; review-ul general de cod rămâne al
+  Superpowers, fără dublură. Raportul lui (constatări cu fișier:linie, gravitate, încredere ≥ 80, verdict
+  APPROVE/BLOCK) intră în review-ul de conformitate al `code-reviewer`. Scris de noi: nu există unul public bun.
 - Skill `vba-workflow`: ordinea fixă după fiecare schimbare de cod VBA, cu comenzile luate din `CLAUDE.md`-ul proiectului:
   (1) backup în `backups/` al workbook-ului care urmează să fie scris; (2) editare doar în sursele text, niciodată direct
   în `.xlsm`; (3) lint; (4) build doar pentru varianta pe care proiectul o declară livrabilă (la `Robot SAP`: cea cu
   licență); (5) verificarea compilării; (6) teste: toate cele existente rulează, comportamentul nou primește teste,
   cele afectate se actualizează; (7) documentația utilizatorului se actualizează într-un singur fișier (la `Robot SAP`:
-  `GHID.md`); nu se întreține o a doua copie cu același conținut.
+  `GHID.md`); nu se întreține o a doua copie cu același conținut. Se aplică la orice schimbare VBA, inclusiv una
+  de mărime MINIMAL (regula explicită a utilizatorului). O impune skill-ul, fără hook în plus.
+- **Ce înseamnă „verificat” pe Mac.** Mac-ul e doar mașina de dezvoltare: utilizatorul nu urmărește dacă macro-ul
+  sau Excel-ul merg pe Mac. Criteriile de acceptanță ale unei schimbări VBA sunt lint, build, compilare și teste.
+  Rularea în Excel și SAP pe Windows e a utilizatorului și nu e criteriu pentru `release-gate`; apare doar ca notă
+  în `delivery-report`. Așa, nici STRICT nu pică din cauza Windows-ului.
 - Hook `workbook-guard` (PreToolUse pe `Write|Edit|NotebookEdit` și `Bash|PowerShell`): o scriere într-un
   `.xlsm`/`.xlsb`/`.xlam` cere în `backups/` o copie a acelui workbook făcută după începutul sesiunii (notat de un hook
   SessionStart). Recunoaște Write/Edit pe astfel de fișiere și comenzile shell care numesc un astfel de fișier ca
@@ -157,6 +164,15 @@ Un test slăbit ca să treacă. Două fișiere de documentație care spun acela�
 **Aplicarea pe `Robot SAP`** (parte din Planul 4): sursele din `Robot_SAP_proiect_v3.10.zip` intră în repo-ul git al
 proiectului; `REZUMAT_PROIECT.md` devine `CLAUDE.md`-ul proiectului, ca să nu existe două rezumate; rămâne un singur
 `GHID.md` (cel mai nou, din `livrabile/`); build-ul variantei cu licență și toate testele existente trebuie să treacă pe Mac.
+- Profilul implicit al proiectului: STANDARD, scris în `.claude/settings.json` (nu în `settings.local.json`, care e în
+  afara git); STRICT se cere pe sesiune cu `profil strict`.
+- Uneltele de build și de test rămân în proiect (`tools/`); `uc-excel` nu livrează un toolchain comun. Se face unul
+  comun doar dacă apare al doilea proiect Excel.
+- Scripturile de test se adaptează ca să ruleze pe Mac (fără `timeout` GNU, Python-ul care vede LibreOffice, un profil
+  LibreOffice separat în loc de cel al utilizatorului, fără să închidă un LibreOffice deschis) și rămân compatibile cu
+  mediul în care rulau înainte.
+- Versiunile livrate din `livrabile/` (v3.7.1–v3.10, câțiva MB) intră în git. În afara git: ieșirea temporară a
+  build-ului, `backups/` și arhiva zip.
 
 **Lăsat celui care construiește:** formularea exactă a agentului și a skill-ului; euristica precisă prin care hook-ul
 recunoaște o comandă de scriere; versiunile exacte fixate pentru LibreOffice și bibliotecile Python.
