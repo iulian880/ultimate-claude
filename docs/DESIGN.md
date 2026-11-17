@@ -108,21 +108,57 @@ sub 35 de linii, propus de installer și aplicat doar cu acord. Un plugin nu poa
 - Template `web-app`: `CLAUDE.md` de proiect, `docs/adr/`, `docs/specs/`, `design-system/`, `.claude/rules/` cu `paths:`,
   schelet de teste, checklist de securitate, performanță și release.
 
-### 5.4 `uc-excel` (activ doar în proiectele Excel/VBA; uneltele rulează doar pe Windows)
+### 5.4 `uc-excel` (activ doar în proiectele Excel/VBA; lucrul zilnic pe Mac, verificarea finală pe Windows)
 
-- Agent `excel-vba-reviewer`: performanță (ScreenUpdating, calcule, bucle pe celule vs. array), integritatea datelor,
-  error handling și recovery, Excel Object Model, compatibilitate 32/64-bit. Scris de noi (nu există unul bun public);
-  lista de verificări pornește de la regulile `xlflow lint`.
-- Skill `vba-workflow`: backup cu timestamp → export module în `src/` → editare ca text → lint → import → rulare teste →
-  comparare cu fișiere „golden" (CSV) → raport. Fără editare directă a `.frm/.frx`.
-- Hook `workbook-guard` (PreToolUse): interceptează comenzile de shell care scriu într-un workbook (`xlflow push`,
-  `xlwings vba import`, `excelcli` cu acțiuni de scriere, scripturi COM din `tests/`) și apelurile Write/Edit pe
-  `.xlsm/.xlsb/.xlam`. Cere ca în `backups/` să existe o copie a acelui workbook creată după începutul sesiunii curente.
-  În STANDARD doar avertizează; în STRICT blochează.
-- Template `excel-vba`: `src/`, `tests/`, `fixtures/`, `golden/`, `backups/` (în afara git), harness Pester, standarde VBA,
-  procedură de deployment și rollback.
-- Unelte: `xlflow` (preferat, **de evaluat într-un spike** — proiect tânăr), `xlwings` ca rezervă matură, MCP-ul Excel
-  `sbroenne/mcp-server-excel` opțional pe proiect, PSScriptAnalyzer + Pester pentru PowerShell.
+Revizuit pe 17.11.2026, după studiul proiectului `Robot SAP` (decizia utilizatorului: fluxul hibrid). Înlocuiește
+varianta inițială cu xlflow/xlwings prin Excel COM și Pester.
+
+**Intenție.** Un proiect Excel/VBA se dezvoltă ca text: sursele VBA (`.bas`, `.cls`) stau în git, workbook-ul se
+construiește din surse fără Excel, iar logica se testează fără Excel. Windows, Excel (și SAP, la `Robot SAP`) servesc
+doar verificării finale, făcută de utilizator. De ce: fluxul există deja în `Robot SAP` și funcționează (build Python,
+teste în LibreOffice headless, linter propriu); Claude lucrează sigur și verificabil pe text; testele rulează pe Mac.
+
+**Scopuri.** Nicio modificare de cod VBA fără lint, build, verificarea compilării și teste. Niciun workbook suprascris
+fără backup. Un review VBA specializat. Fluxul existent al proiectului se păstrează, nu se înlocuiește.
+
+**Non-scopuri.** Claude nu automatizează Excel sau SAP pe Windows. Fără verificări de compatibilitate 32/64 de biți
+(decizia utilizatorului). Fără xlflow, xlwings, Pester, PSScriptAnalyzer, MCP-ul Excel și fără spike-ul dintre ele.
+
+**Anti-scopuri.** O modificare făcută direct în `.xlsm` care nu există în surse. Un workbook suprascris fără backup.
+Un test slăbit ca să treacă. Două fișiere de documentație care spun același lucru.
+
+**Componente.**
+- Agent `excel-vba-reviewer` (doar citire): performanță (`ScreenUpdating`, `Calculation`, `EnableEvents` restaurate;
+  bucle pe celule în loc de tablouri; `Select`/`Activate`); tratarea erorilor și revenirea (`On Error` fără resetare,
+  starea Excel nerestaurată pe calea de eroare, erori înghițite); integritatea datelor (scrieri parțiale, tipuri, date și
+  numere dependente de setările regionale, celule goale); Excel Object Model (referințe necalificate la
+  `ActiveSheet`/`ActiveWorkbook`, evenimente, obiecte neeliberate). Același format de raport, prag de încredere și
+  verdict ca `code-reviewer` din `uc-core`. Scris de noi: nu există unul public bun.
+- Skill `vba-workflow`: ordinea fixă după fiecare schimbare de cod VBA, cu comenzile luate din `CLAUDE.md`-ul proiectului:
+  (1) backup în `backups/` al workbook-ului care urmează să fie scris; (2) editare doar în sursele text, niciodată direct
+  în `.xlsm`; (3) lint; (4) build doar pentru varianta pe care proiectul o declară livrabilă (la `Robot SAP`: cea cu
+  licență); (5) verificarea compilării; (6) teste: toate cele existente rulează, comportamentul nou primește teste,
+  cele afectate se actualizează; (7) documentația utilizatorului se actualizează într-un singur fișier (la `Robot SAP`:
+  `GHID.md`); nu se întreține o a doua copie cu același conținut.
+- Hook `workbook-guard` (PreToolUse pe `Write|Edit|NotebookEdit` și `Bash|PowerShell`): o scriere într-un
+  `.xlsm`/`.xlsb`/`.xlam` cere în `backups/` o copie a acelui workbook făcută după începutul sesiunii (notat de un hook
+  SessionStart). Recunoaște Write/Edit pe astfel de fișiere și comenzile shell care numesc un astfel de fișier ca
+  destinație (copiere, mutare, redirecționare, ștergere, argument al unui script). Un script de build care scrie un
+  workbook fără să-l numească în comandă nu poate fi recunoscut: pentru el răspunde pasul 1 din `vba-workflow`.
+  MINIMAL și STANDARD: avertizează; STRICT: blochează.
+- Template `excel-vba`: `CLAUDE.md` de proiect (ce este, comenzile de lint, build, compilare și teste, fișierul de
+  documentație, regulile proiectului), `.claude/settings.json` cu `enabledPlugins` pentru `uc-core` și `uc-excel`,
+  `.gitignore` cu `backups/`, workbook-urile construite și arhivele.
+- Unelte pe Mac, pe proiect: LibreOffice (Homebrew) pentru compilare și teste; bibliotecile Python ale build-ului
+  într-un mediu virtual al proiectului, nu global (Python-ul din Homebrew refuză instalarea globală, iar mediul izolează
+  versiunile). Fiecare apare în `components.lock.json` cu versiune fixată.
+
+**Aplicarea pe `Robot SAP`** (parte din Planul 4): sursele din `Robot_SAP_proiect_v3.10.zip` intră în repo-ul git al
+proiectului; `REZUMAT_PROIECT.md` devine `CLAUDE.md`-ul proiectului, ca să nu existe două rezumate; rămâne un singur
+`GHID.md` (cel mai nou, din `livrabile/`); build-ul variantei cu licență și toate testele existente trebuie să treacă pe Mac.
+
+**Lăsat celui care construiește:** formularea exactă a agentului și a skill-ului; euristica precisă prin care hook-ul
+recunoaște o comandă de scriere; versiunile exacte fixate pentru LibreOffice și bibliotecile Python.
 
 ### 5.5 Componente terțe (toate în `components.lock.json`, fixate)
 
@@ -215,7 +251,7 @@ dată cu mesajul „rulează release-gate"; a doua oprire trece (fără bucle) �
 - Repo-ul e privat, pe contul GitHub al utilizatorului; pe Windows accesul se face cu `gh auth login`, rulat de utilizator.
   Sistemul e gândit pentru mașinile utilizatorului, nu pentru distribuție publică.
 - Ce doar propune, ca diff, și aplică numai cu acord pe fiecare element: `settings.json`, permisiuni, servere MCP, hooks
-  existente, blocul din `CLAUDE.md`, PATH, setarea VBA trust.
+  existente, blocul din `CLAUDE.md`, PATH.
 - Idempotent: a doua rulare nu schimbă nimic. Fără suprascrieri silențioase: un fișier modificat de utilizator oprește
   pasul și e raportat.
 - `~/.claude/uc/state.json` ține tot ce a scris installerul (cale, hash, backup). `--uninstall` și `--rollback <dată>`
@@ -253,12 +289,12 @@ Detalii și comenzi de restaurare: `docs/verification/mac-migration.md`.
   utilizatorul verifică prin sondaj. Se începe cu un pilot mic (2 sarcini × 2 configurații × 2 rulări) și se extinde
   doar după o estimare de cost aprobată. Regula de decizie: o componentă care nu aduce o îmbunătățire măsurabilă în
   categoria ei e propusă spre scoatere; decide utilizatorul. Sarcinile VBA rulează doar pe mașina Windows cu Excel.
-- **Neverificabil fără mașina reală:** tot ce ține de Excel (xlflow, COM, VBA trust) — CI-ul nu are Excel.
+- **Neverificabil fără mașina reală:** rularea în Excel și în SAP pe Windows; o face utilizatorul (§5.4). Logica VBA se testează pe Mac în LibreOffice.
 
 ## 11. Fazele de implementare
 
 0. Spike-uri (aruncabile): agenți de plugin cu `skills:` preîncărcate; marcajul de sesiune citit de hooks în aplicația
-   desktop; hooks Node pe Windows; `xlflow` vs `xlwings` pe o mașină cu Excel (ultimele două așteaptă mașina Windows).
+   desktop; hooks Node pe Windows (așteaptă mașina Windows). Spike-ul xlflow vs xlwings a căzut odată cu §5.4 revizuit.
 1. Repo + `uc-core` + lockfile. 2. Migrarea Mac-ului. 3. `uc-web`. 4. `uc-excel`. 5. Installer + teste.
 6. Benchmark. 7. Test pe mașina Windows reală.
 
@@ -280,7 +316,6 @@ Detalii și comenzi de restaurare: `docs/verification/mac-migration.md`.
 
 - Dacă un skill poate afla `session_id` pentru a scrie marcajul de profil (altfel îl scrie un hook UserPromptSubmit).
 - Comportamentul pe Windows nativ pentru Context7 CLI, ccusage, Playwright CLI, mattpocock/skills; MCP pe Windows.
-- Maturitatea reală a `xlflow` (ultima versiune confirmată: v0.7.0, mai 2026).
 - Schimbările Claude Code din iulie–octombrie 2026 (changelog-ul citit acoperă doar 6–13 noiembrie).
 - Cifrele de economie ale Ponytail și Graphify (auto-raportate).
 
