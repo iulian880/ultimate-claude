@@ -1,0 +1,13 @@
+{
+  "name": "ultimate-claude",
+  "owner": {
+    "name": "ultimate-claude"
+  },
+  "plugins": [
+    {
+      "name": "uc-core",
+      "source": "./plugins/uc-core",
+      "description": "Engineering-team core: architect, code-reviewer, qa-engineer and release-gate agents, complexity and delivery skills, guard hooks and MINIMAL/STANDARD/STRICT profiles."
+    }
+  ]
+}

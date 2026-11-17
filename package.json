@@ -1,0 +1,14 @@
+{
+  "name": "ultimate-claude",
+  "version": "0.1.0",
+  "description": "Private Claude Code plugin marketplace: uc-core, uc-web, uc-excel",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "node --test \"tests/*.test.mjs\"",
+    "lint": "node scripts/lint-plugin.mjs plugins/uc-core"
+  }
+}
