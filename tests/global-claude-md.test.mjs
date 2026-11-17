@@ -29,6 +29,15 @@ test('has the three-profile table and the MINIMAL override', () => {
   }
 });
 
+test('MINIMAL-sized work is done directly whatever the session profile', () => {
+  assert.ok(text().includes('whatever the session profile'));
+});
+
+test('says what to do in projects where uc-core is not enabled', () => {
+  assert.ok(text().includes('Where uc-core is not enabled'));
+  assert.ok(text().includes('requesting-code-review'));
+});
+
 test('drops the v3 ban on custom subagents and keeps agent teams off', () => {
   assert.ok(!text().includes('Do not create custom subagents'));
   assert.ok(text().includes('agent teams stay off'));
