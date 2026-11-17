@@ -86,6 +86,7 @@ test('CLI flow: track-edit then profile-gate exits 2 once, then 0', () => {
   const base = tempDir('uc gate cfg ');
   const cwd = tempDir('uc gate project ');
   const env = { ...process.env, CLAUDE_CONFIG_DIR: base, UC_PROFILE: 'strict' };
+  delete env.CLAUDE_PROJECT_DIR;
   const run = (name, input) => spawnSync(process.execPath, [hookPath(name)], {
     input: JSON.stringify(input), encoding: 'utf8', env,
   });
@@ -104,6 +105,7 @@ test('CLI: standard profile and empty stdin exit 0', () => {
   const base = tempDir('uc gate cfg ');
   const cwd = tempDir('uc gate project ');
   const env = { ...process.env, CLAUDE_CONFIG_DIR: base };
+  delete env.CLAUDE_PROJECT_DIR;
   delete env.UC_PROFILE;
   const run = (name, input) => spawnSync(process.execPath, [hookPath(name)], { input, encoding: 'utf8', env });
   assert.equal(run('track-edit.mjs', JSON.stringify({ session_id: 's', cwd })).status, 0);

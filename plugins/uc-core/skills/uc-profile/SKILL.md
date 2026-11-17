@@ -54,9 +54,12 @@ and if neither sets it, the profile is STANDARD.
 ## What the STRICT gate enforces
 
 - When the session enters STRICT, a hook records a fingerprint of the code (in a git project: everything git would
-  commit, excluding `.uc/`). Edits made with any tool, Bash and scripts included, change it.
-- The `release-gate` agent writes its proof to `.uc/verification/<timestamp>.json`; it counts only with a PASS
-  verdict, passing checks, every criterion VERIFIED and a `tree` equal to the fingerprint of the current code.
+  commit, excluding `.uc/` folders and `.claude/agent-memory/`). Edits made with any tool, Bash and scripts included,
+  change it. If the session already edited files before it switched to STRICT, the start is unknown and any stop
+  needs a PASS. Bash-only edits made before the switch are not seen: start the session in STRICT to cover them.
+- The `release-gate` agent writes its proof to `.uc/verification/<timestamp>.json` in the project root. It counts
+  only when complete: PASS, every check passed, at least one criterion and all VERIFIED, nothing left unverified,
+  the same fingerprint before and after the checks, and that fingerprint equal to the current code.
 - When you try to stop and the code changed with no such proof, the stop is blocked once with:
   "STRICT profile: the code changed in this session and no PASS verification matches it."
   Outside git the gate falls back to the time of the last Edit/Write against the newest PASS.

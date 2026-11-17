@@ -45,7 +45,7 @@ test('shouldBlockTree: only STRICT, only when the tree changed, unless a PASS ma
 
 test('passingTrees: a proof counts only with a tree, passing checks and every criterion VERIFIED', () => {
   const dir = tmp('uc proofs ');
-  proof(dir, 'ok.json', { verdict: 'PASS', at: 'x', tree: 'T1', checks: goodChecks, criteria: [{ criterion: 'c', status: 'VERIFIED', checks: [0] }], unverified: [] });
+  proof(dir, 'ok.json', { verdict: 'PASS', at: 'x', treeBefore: 'T1', tree: 'T1', checks: goodChecks, criteria: [{ criterion: 'c', status: 'VERIFIED', checks: [0] }], unverified: [] });
   proof(dir, 'notree.json', { verdict: 'PASS', at: '2099-01-01T00:00:00Z', checks: goodChecks });
   proof(dir, 'nochecks.json', { verdict: 'PASS', tree: 'T2', checks: [] });
   proof(dir, 'failedcheck.json', { verdict: 'PASS', tree: 'T3', checks: [{ command: 'x', exitCode: 1, summary: '' }] });
@@ -62,6 +62,7 @@ test('CLI: a Bash-style edit in STRICT is caught; one block per state; a matchin
   const dir = repo();
   const cfg = tmp('uc gate cfg ');
   const env = { ...process.env, CLAUDE_CONFIG_DIR: cfg, UC_PROFILE: 'strict' };
+  delete env.CLAUDE_PROJECT_DIR;
   const stop = { session_id: 's1', cwd: dir, stop_hook_active: false };
   assert.equal(hook('session-start.mjs', { session_id: 's1', cwd: dir, hook_event_name: 'SessionStart' }, env).status, 0);
   assert.ok(readSession('s1', { CLAUDE_CONFIG_DIR: cfg }).startTree);
@@ -80,7 +81,9 @@ test('CLI: a Bash-style edit in STRICT is caught; one block per state; a matchin
   proof(dir, 'real.json', { verdict: 'PASS', at: new Date().toISOString(), tree: treeFingerprint(dir), checks: goodChecks, criteria: [], unverified: [] });
   fs.writeFileSync(path.join(dir, 'b.txt'), 'later edit\n');
   assert.equal(hook('profile-gate.mjs', stop, env).status, 2, 'the PASS was for an older state');
-  proof(dir, 'real2.json', { verdict: 'PASS', at: new Date().toISOString(), tree: treeFingerprint(dir), checks: goodChecks });
+  const now = treeFingerprint(dir);
+  proof(dir, 'real2.json', { verdict: 'PASS', at: new Date().toISOString(), treeBefore: now, tree: now, checks: goodChecks,
+    criteria: [{ criterion: '1. c', status: 'VERIFIED', checks: [0] }], unverified: [] });
   assert.equal(hook('profile-gate.mjs', stop, env).status, 0, 'PASS for the current state');
 });
 
@@ -89,6 +92,7 @@ test('CLI: switching to STRICT mid-session records the start state then', () => 
   const cfg = tmp('uc gate cfg ');
   const env = { ...process.env, CLAUDE_CONFIG_DIR: cfg };
   delete env.UC_PROFILE;
+  delete env.CLAUDE_PROJECT_DIR;
   assert.equal(hook('session-start.mjs', { session_id: 's2', cwd: dir }, env).status, 0);
   assert.equal(readSession('s2', { CLAUDE_CONFIG_DIR: cfg }).startTree, undefined, 'not strict: no fingerprint');
   assert.equal(hook('set-profile.mjs', { session_id: 's2', cwd: dir, prompt: 'profil strict' }, env).status, 0);

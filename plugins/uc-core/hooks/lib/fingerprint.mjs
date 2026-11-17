@@ -1,11 +1,15 @@
 // Fingerprint of the working tree for the STRICT gate: the git tree hash of everything in the working directory
-// that git would add (tracked, modified, deleted and new files; .gitignore respected), excluding .uc/.
+// that git would add (tracked, modified, deleted and new files; .gitignore respected), excluding every .uc/ folder
+// (verification proofs) and .claude/agent-memory/ (notes the reviewing agents keep): neither is code.
 // Content-based: it changes with any edit, however it was made, and stays the same after committing that content.
 // Computed in a temporary index, so the real index is never touched. null outside a git repository.
 import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+
+// Pathspecs relative to the repository root; `**/` also matches at the root, so monorepo packages are covered.
+const NOT_CODE = [':(glob)**/.uc/**', ':(glob)**/.claude/agent-memory/**'];
 
 function git(args, cwd, env = process.env) {
   const r = spawnSync('git', ['-C', cwd, ...args], { encoding: 'utf8', env: { ...env, GIT_OPTIONAL_LOCKS: '0' }, maxBuffer: 64 * 1024 * 1024 });
@@ -31,8 +35,9 @@ export function treeFingerprint(projectDir) {
       fs.utimesSync(index, st.atime, st.mtime);
     }
     const env = { ...process.env, GIT_INDEX_FILE: index };
-    if (git(['add', '-A', '--', '.', ':(exclude).uc'], root, env) === null) return null;
-    git(['rm', '--cached', '-r', '-q', '--ignore-unmatch', '--', '.uc'], root, env);
+    const excluded = NOT_CODE.map((p) => p.replace(':(glob)', ':(exclude,glob)'));
+    if (git(['add', '-A', '--', '.', ...excluded], root, env) === null) return null;
+    git(['rm', '--cached', '-r', '-q', '--ignore-unmatch', '--', ...NOT_CODE], root, env);
     return git(['write-tree'], root, env);
   } finally {
     fs.rmSync(index, { force: true });

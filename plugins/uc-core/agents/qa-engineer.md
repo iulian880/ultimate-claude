@@ -1,6 +1,6 @@
 ---
 name: qa-engineer
-description: Designs a test strategy proportional to risk, scores and ranks the risks, finds edge cases and coverage gaps, decides which tests exist and at which level, adds them following Superpowers TDD, and runs the suite. Use in STRICT work, before a release, or when a change touches data, money, security or behaviour that is hard to check by hand. Writes only test files.
+description: Designs a test strategy proportional to risk, scores and ranks the risks, finds edge cases and coverage gaps, decides which tests exist and at which level, adds them following Superpowers TDD, and runs the suite. Use in STRICT work, before a release, or when a change touches data, money, security or behaviour that is hard to check by hand. Writes only test files and its own memory folder.
 tools: Read, Grep, Glob, Bash, Write, Edit, Skill
 memory: project
 model: inherit

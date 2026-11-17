@@ -1,9 +1,10 @@
 // Reads the verification proofs written by the release-gate agent.
 // Schema: {"verdict": "PASS"|"FAIL", "at": "<ISO 8601>", "checks": [{command, exitCode, summary}],
 //          "criteria": [{criterion, status: "VERIFIED"|"FAILED"|"NOT PERFORMED", checks: [index]}], "unverified": [string],
-//          "tree": "<working-tree fingerprint, hooks/fingerprint.mjs>"}
-// latestPassAt (non-git projects) reads `verdict` and `at`. passingTrees (git projects) also requires `tree`, at least
-// one check with every exitCode 0, and every criterion VERIFIED.
+//          "treeBefore": "<fingerprint before the first check>", "tree": "<fingerprint after the last check>"}
+// latestPassAt (non-git projects) reads `verdict` and `at`. passingTrees (git projects) requires a complete proof:
+// `tree` equal to `treeBefore` (the checks did not change the code), at least one check and every exitCode 0, at least
+// one criterion and every criterion VERIFIED, and an empty `unverified` list.
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -50,14 +51,18 @@ function readProofs(projectDir) {
   });
 }
 
-/** Trees that a valid PASS proof vouches for: verdict PASS, a tree, passing checks, every criterion VERIFIED. */
+const nonEmpty = (list) => Array.isArray(list) && list.length > 0;
+
+/** True for a PASS proof with nothing missing, failed or left unverified, taken on code the checks did not change. */
+function isCompletePass(p) {
+  return p?.verdict === 'PASS'
+    && typeof p.tree === 'string' && p.tree !== '' && p.treeBefore === p.tree
+    && nonEmpty(p.checks) && p.checks.every((c) => c?.exitCode === 0)
+    && nonEmpty(p.criteria) && p.criteria.every((c) => c?.status === 'VERIFIED')
+    && Array.isArray(p.unverified) && p.unverified.length === 0;
+}
+
+/** The code states (trees) that a complete PASS proof vouches for. */
 export function passingTrees(projectDir) {
-  const trees = new Set();
-  for (const p of readProofs(projectDir)) {
-    if (p?.verdict !== 'PASS' || typeof p.tree !== 'string' || !p.tree) continue;
-    if (!Array.isArray(p.checks) || p.checks.length === 0 || !p.checks.every((c) => c?.exitCode === 0)) continue;
-    if (p.criteria !== undefined && !(Array.isArray(p.criteria) && p.criteria.every((c) => c?.status === 'VERIFIED'))) continue;
-    trees.add(p.tree);
-  }
-  return trees;
+  return new Set(readProofs(projectDir).filter(isCompletePass).map((p) => p.tree));
 }

@@ -1,7 +1,7 @@
 ---
 name: delivery-report
 description: The final report for a piece of work - what was done, what was verified and how, what was not verified and why, decisions made and follow-ups. Keeps "done" tied to evidence.
-when_to_use: Use at the end of STANDARD or STRICT work, before claiming that a task, a plan or a feature is done, and whenever the profile gate blocked a stop because files changed after the last verification.
+when_to_use: Use at the end of STANDARD or STRICT work, before claiming that a task, a plan or a feature is done, and whenever the profile gate blocked a stop because the code changed and no PASS verification matches it.
 ---
 
 # Delivery report
@@ -56,7 +56,7 @@ with what it costs if wrong; "Deferred minors" goes verbatim under Follow-ups.
 - A failing check is reported as failing, with the output. It is never moved to Follow-ups to make the
   report look clean.
 - If the profile gate blocked a stop and the work was closed without a PASS, state it under
-  "Not verified": "STRICT gate: files changed after the last PASS; closed without a new verification".
+  "Not verified": "STRICT gate: the code changed and no PASS matches it; closed without a new verification".
 - No praise and no filler. If the work is partly done, the first line says which part.
 
 ## Length

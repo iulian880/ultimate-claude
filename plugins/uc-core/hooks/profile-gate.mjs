@@ -5,7 +5,7 @@
 // Other projects: falls back to the last Edit/Write time against the newest PASS. One block per state, so never a
 // loop. Does nothing in MINIMAL and STANDARD.
 import { isMain, runHook } from './lib/hook-io.mjs';
-import { readSession, resolveProfile, updateSession } from './lib/state.mjs';
+import { projectDir, readSession, resolveProfile, updateSession } from './lib/state.mjs';
 import { latestPassAt as findLatestPassAt, passingTrees } from './lib/verification.mjs';
 import { treeFingerprint } from './lib/fingerprint.mjs';
 
@@ -34,12 +34,13 @@ export function handle(input) {
   if (input === null) return { exit: 0 };
   const session = readSession(input.session_id);
   const profile = resolveProfile({ sessionId: input.session_id });
-  if (profile === 'strict' && session.startTree && typeof input.cwd === 'string') {
-    const currentTree = treeFingerprint(input.cwd);
+  const dir = projectDir(input);
+  if (profile === 'strict' && session.startTree && dir) {
+    const currentTree = treeFingerprint(dir);
     if (currentTree) {
       const block = shouldBlockTree({
         profile, stopHookActive: input.stop_hook_active === true, startTree: session.startTree, currentTree,
-        passTrees: passingTrees(input.cwd), blockedTree: session.gateBlockedTree,
+        passTrees: passingTrees(dir), blockedTree: session.gateBlockedTree,
       });
       if (!block) return { exit: 0 };
       updateSession(input.session_id, { gateBlockedTree: currentTree, gateBlockedAt: new Date().toISOString() });
@@ -49,7 +50,7 @@ export function handle(input) {
   const block = shouldBlock({
     profile,
     lastEditAt: session.lastEditAt,
-    latestPassAt: typeof input.cwd === 'string' ? findLatestPassAt(input.cwd) : null,
+    latestPassAt: dir ? findLatestPassAt(dir) : null,
     stopHookActive: input.stop_hook_active === true,
     gateBlockedAt: session.gateBlockedAt,
   });

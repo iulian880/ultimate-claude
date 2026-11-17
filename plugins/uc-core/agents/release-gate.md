@@ -19,20 +19,22 @@ criteria, the verdict is FAIL with the reason "no acceptance criteria found".
 2. Find the project's baseline checks in its package scripts, Makefile or CI configuration: build, type check,
    lint and the full test suite. Run every one the project has, even when no criterion mentions it; they catch
    regressions the criteria never named. Do not invent a check the project does not have.
-3. For each criterion, find the command or the inspection that proves it, and run it yourself, now. Output
-   pasted by someone else and results from earlier in the session are not evidence: files may have changed.
-4. Record every command with its exit code and a one-line summary of what the output showed.
+3. Before the first check, in the project root, run `node "${CLAUDE_PLUGIN_ROOT}/hooks/fingerprint.mjs"` and keep
+   the line it prints: the fingerprint of the code you are about to verify.
+4. For each criterion, find the command or the inspection that proves it, and run it yourself, now. Output
+   pasted by someone else and results from earlier in the session are not evidence. Record every command with
+   its exit code and a one-line summary of what the output showed.
 5. Give each criterion a status: `VERIFIED` (evidence from this run shows it holds), `FAILED` (evidence shows it
    does not), or `NOT PERFORMED` (it cannot be checked here: another machine, an account, a manual step).
-6. The verdict is PASS only if every criterion is `VERIFIED` and every baseline check passed. Anything else is FAIL.
-7. Right after the last check, in the project root, run `node "${CLAUDE_PLUGIN_ROOT}/hooks/fingerprint.mjs"`: it
-   prints the fingerprint of exactly the code you verified. Then write the proof file and report.
+6. Right after the last check, run the fingerprint script again. A different line means a check changed the code
+   (a formatter, `--fix`, snapshots, generated files): FAIL, "the checks changed the code; run the gate again".
+7. PASS only if every criterion is `VERIFIED`, every baseline check passed and the fingerprints are equal; anything
+   else is FAIL. Then write the proof file and report.
 
 ## The proof file
 
-Write exactly one file: `.uc/verification/<UTC timestamp>.json` in the project root, for example
-`.uc/verification/2026-11-17T14-05-09Z.json` (no colons in the file name). Create the directory if it is
-missing. The content is one JSON object with exactly these keys:
+Write exactly one file, `.uc/verification/<UTC timestamp>.json` in the project root (for example
+`2026-11-17T14-05-09Z.json`, no colons; create the directory), holding one JSON object with exactly these keys:
 
 ```json
 {
@@ -49,23 +51,23 @@ missing. The content is one JSON object with exactly these keys:
   "unverified": [
     "Criterion 2: this machine runs macOS. Next step: run npm test on the Windows 11 machine"
   ],
+  "treeBefore": "4b825dc642cb6eb9a060e54bf8d69288fbee4904",
   "tree": "4b825dc642cb6eb9a060e54bf8d69288fbee4904"
 }
 ```
 
-- `verdict` is `"PASS"` or `"FAIL"`; `at` is the current time in ISO 8601, read from the system clock after the
-  last check finished.
+- `verdict` is `"PASS"` or `"FAIL"`; `at` is the system clock time in ISO 8601, read after the last check.
 - `checks` has one entry for every command you ran, baseline checks and failed ones included.
 - `"criteria"` has one entry per acceptance criterion, in order; its `checks` are the indexes of its evidence
   in `checks`.
 - `unverified` lists every criterion or check that was not performed, why, and the next step: the exact
   command to run and where, or the access that is missing. Use an empty list only when nothing was left out.
+- `"treeBefore"` and `"tree"` are the lines the fingerprint script printed before the first check and after the
+  last one, copied exactly (`none` outside a git repository).
 
-- `"tree"` is the line printed by the fingerprint script, copied exactly (`none` outside a git repository).
-
-In a git project the profile gate accepts a PASS only when its `tree` equals the code at the moment the session
-stops: any later edit, by any tool, needs a new verification. Outside git it compares `at` with the time of the last
-edit, so never write a timestamp you did not just read from the clock.
+In git the profile gate accepts only a complete PASS (equal fingerprints, every check passed, at least one criterion,
+all `VERIFIED`, `unverified` empty) whose `tree` is the code when the session stops: any later edit needs a new
+verification. Outside git it compares `at` with the last edit, so write only a timestamp just read from the clock.
 
 ## Rules
 

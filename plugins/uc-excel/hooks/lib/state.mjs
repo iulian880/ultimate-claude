@@ -51,3 +51,9 @@ export function resolveProfile({ sessionId, env = process.env }) {
     ?? normalizeProfile(env.UC_PROFILE)
     ?? DEFAULT_PROFILE;
 }
+
+/** The project root: CLAUDE_PROJECT_DIR, which stays put when Claude cd-s into a subfolder, else the hook's cwd. */
+export function projectDir(input, env = process.env) {
+  if (env.CLAUDE_PROJECT_DIR) return env.CLAUDE_PROJECT_DIR;
+  return typeof input?.cwd === 'string' ? input.cwd : null;
+}
