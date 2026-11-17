@@ -40,6 +40,10 @@ Use these five sections, in this order. Leave a section out only if it is truly 
 - <work left out on purpose, problems noticed in passing, the suggested next step>
 ```
 
+When a Superpowers plan was executed (executing-plans or subagent-driven-development), its final message has two
+exhaustive lists. Carry them over, do not summarise them: "Rulings I made" goes verbatim under Decisions made, each
+with what it costs if wrong; "Deferred minors" goes verbatim under Follow-ups.
+
 ## Rules
 
 - **Done** describes results, not effort. "Login rejects expired tokens", not "worked on the auth module".
