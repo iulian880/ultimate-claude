@@ -132,7 +132,7 @@ sub 35 de linii, propus de installer și aplicat doar cu acord. Un plugin nu poa
 | mattpocock/skills (cele 4–5 deja instalate) | păstrat, vocabular de arhitectură + ADR | global |
 | Context7 — CLI `ctx7` + skill, fără MCP | păstrat | global |
 | Pluginuri LSP native (TypeScript, Python, C#) | păstrat, prima alegere pentru navigare | global |
-| security-guidance | păstrat; dependență declarată a `uc-core` (decizia utilizatorului, 17.11.2026), pentru că review-urile lui Opus consumă din plan | doar unde e activ `uc-core` |
+| security-guidance | păstrat; dependență declarată a `uc-core` (decizia utilizatorului, 17.11.2026). Review-urile lui cu Opus sunt oprite global (`ENABLE_CODE_SECURITY_REVIEW=0`), rămân avertismentele automate | doar unde e activ `uc-core` |
 | Frontend Design (Anthropic) | păstrat | proiecte web |
 | UI UX Pro Max v2.15.0 | păstrat, la cerere | skill local în proiectele cu interfață |
 | Playwright CLI | **înlocuiește** Playwright MCP | proiecte web |
@@ -224,11 +224,20 @@ dată cu mesajul „rulează release-gate"; a doua oprire trece (fără bucle) �
 
 ## 9. Migrarea Mac-ului (v3 → V2)
 
-Cu backup și acord pe fiecare punct: RTK rămâne (vezi §5.5), rescrierea `~/.claude/CLAUDE.md`
-(dispare „Do not create custom subagents"), mutarea `block-destructive` în `uc-core`, înlocuirea Playwright MCP cu CLI,
-auditul pluginurilor instalate dar fără proprietar în §6 (`headroom`, `code-graph`, `engineering`, `design`, `data`,
-`productivity`, `datarobot`, `firecrawl`), marcarea `SETUP-SPEC.md` ca înlocuit, actualizarea `PLAYBOOK.md` și
-`RAPORT-setup.md`. Proiectele `notirelay` și `telegram-mt5-copier` își păstrează configurarea de proiect.
+Făcută pe 17.11.2026 (Planul 2), cu backup în `~/.claude/backups/2026-11-17/` și acord pe fiecare punct.
+Detalii și comenzi de restaurare: `docs/verification/mac-migration.md`.
+
+- `~/.claude/CLAUDE.md` rescris cu blocul V2 din `installer/proposals/global-claude-md.md` (dispare
+  „Do not create custom subagents"; agent teams rămân oprite).
+- RTK rămâne (vezi §5.5).
+- `~/.claude/hooks/block-destructive.sh` rămâne global, pentru că `uc-core` nu e activ global (decizia
+  utilizatorului). Versiunea Node din `uc-core` îl va înlocui prin installer (Planul 5), inclusiv pe Windows.
+- Arhivate: `~/.claude/PLAYBOOK.md` (ghidul v3) și `~/.claude/hooks/notirelay-exe.sh` (nefolosit, proiect absent).
+- `ENABLE_CODE_SECURITY_REVIEW=0` rămâne global (decizia utilizatorului): security-guidance rulează doar
+  avertismentele automate; review-ul de securitate complet se face cu `/security-review`.
+- Absente deja, fără acțiune: Playwright MCP, pluginurile `headroom`, `code-graph`, `engineering`, `design`, `data`,
+  `productivity`, `datarobot`, `firecrawl`, documentele `SETUP-SPEC.md` și `RAPORT-setup.md`, proiectele
+  `notirelay` și `telegram-mt5-copier`.
 
 ## 10. Teste și benchmark
 
