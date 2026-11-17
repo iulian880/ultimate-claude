@@ -12,7 +12,7 @@ const blocked = ['rm -rf build', 'rm -fr x', 'rm -r -f x', 'rm --recursive --for
   'git push origin +main', 'Remove-Item -Recurse -Force .\\out', 'Remove-Item out -Force -Recurse',
   'rd /s /q out', 'rmdir /S /Q out'];
 const allowed = ['rm -r dir', 'rm -f file.txt', 'git push --force-with-lease', 'git reset --soft HEAD~1',
-  'git push origin main', 'Remove-Item file.txt', 'Remove-Item -Recurse out', 'npm run format'];
+  'git push origin main', 'Remove-Item file.txt', 'npm run format'];
 
 test('each blocked command returns a label', () => {
   for (const command of blocked) assert.equal(typeof findDestructive(command), 'string', command);
@@ -55,4 +55,65 @@ test('CLI: allowed command exits 0, blocked exits 2 with label in stderr', () =>
 test('CLI: input without a command string is scanned as a whole', () => {
   assert.equal(run(JSON.stringify({ tool_name: 'Bash', tool_input: {} })).status, 0);
   assert.equal(run(JSON.stringify({ tool_name: 'X', tool_input: { script: 'git reset --hard' } })).status, 2);
+});
+
+// Audit 2026-11-18: git commands that throw away work, PowerShell short forms, text that only mentions a command.
+const RF = 'r' + 'm -rf';
+const HARD = 'git reset --' + 'hard';
+
+test('git commands that throw away uncommitted work or branches are blocked', () => {
+  for (const c of ['git clean -fdx', 'git clean -f', 'git clean --force -d', 'git clean -xdf', 'git -C repo clean -fX',
+    'git checkout -- .', 'git checkout .', 'git checkout -f main', 'git restore .', 'git restore :/',
+    'git restore --staged --worktree .', 'git stash drop', 'git stash clear', 'git branch -D feat',
+    'git branch --delete --force feat', 'git branch -df feat', 'git push --delete origin feat', 'git push origin -d feat',
+    'git push origin :main', 'git push --mirror backup', 'git push --prune origin']) {
+    assert.equal(typeof findDestructive(c), 'string', c);
+  }
+});
+
+test('the safe forms of the same git commands still run', () => {
+  for (const c of ['git clean -n', 'git clean -fn', 'git clean -f --dry-run', 'git checkout -- src/a.js', 'git checkout main',
+    'git checkout -b feat', 'git restore --staged .', 'git restore src/a.js', 'git stash', 'git stash pop',
+    'git branch -d feat', 'git push -u origin feat', 'git status']) {
+    assert.equal(findDestructive(c), null, c);
+  }
+});
+
+test('PowerShell recursive deletes are blocked in their short and aliased forms', () => {
+  for (const c of ['Remove-Item -r -fo x', 'Remove-Item -Recurse x', 'Remove-Item x -rec', 'Remove-Item -R:$true x',
+    'ri -Recurse -Force x', 'del -Recurse -Force x', 'erase -r x', 'rm -Recurse -Force C:\\x', 'rd x -Recurse',
+    'powershell -c "del -r x"', 'del /s /q out', 'erase /S out']) {
+    assert.equal(typeof findDestructive(c), 'string', c);
+  }
+  for (const c of ['rm -r x', 'rd -r x', 'rmdir -r x']) {
+    assert.equal(typeof findDestructive(c, { powershell: true }), 'string', `PowerShell: ${c}`);
+  }
+});
+
+test('Bash rm -r, single-file deletes and -WhatIf previews are not PowerShell deletes', () => {
+  for (const c of ['rm -r dir', 'del file.txt', 'Remove-Item file.txt', 'Remove-Item x -Recurse -WhatIf']) {
+    assert.equal(findDestructive(c), null, c);
+  }
+});
+
+test('text that only mentions a destructive command is not blocked', () => {
+  for (const c of [`git commit -m "docs: never ${HARD}"`, `git commit -m 'fix: push -f no longer'`, `git log --grep="${RF}"`,
+    `grep -n "${RF}" file.js`, `rg "${HARD}" docs`, `echo "git push -f"`, `printf '${RF} x\\n'`,
+    `git commit -m "a; ${RF} x"`]) {
+    assert.equal(findDestructive(c), null, c);
+  }
+});
+
+test('commands hidden in quotes that run are still blocked', () => {
+  for (const c of [`git commit -m "$(${RF} x)"`, `bash -c "${RF} x"`, `echo ok; ${RF} x`, `echo "\`${RF} x\`"`,
+    `sh -c '${HARD}'`]) {
+    assert.equal(typeof findDestructive(c), 'string', c);
+  }
+});
+
+test('the PowerShell tool turns on PowerShell aliases', () => {
+  const r = spawnSync(process.execPath, [hook], {
+    input: JSON.stringify({ tool_name: 'PowerShell', tool_input: { command: 'rm -r C:\\work\\out' } }), encoding: 'utf8',
+  });
+  assert.equal(r.status, 2);
 });
