@@ -52,7 +52,7 @@ test('release-gate example proof is valid JSON with per-criterion statuses', () 
   const block = /```json\n([\s\S]*?)```/.exec(read('release-gate'));
   assert.ok(block, 'json example missing');
   const proof = JSON.parse(block[1]);
-  assert.deepEqual(Object.keys(proof).sort(), ['at', 'checks', 'criteria', 'unverified', 'verdict']);
+  assert.deepEqual(Object.keys(proof).sort(), ['at', 'checks', 'criteria', 'tree', 'unverified', 'verdict']);
   for (const c of proof.criteria) {
     assert.ok(['VERIFIED', 'FAILED', 'NOT PERFORMED'].includes(c.status), c.status);
     for (const i of c.checks) assert.ok(proof.checks[i], `criterion points to missing check ${i}`);
@@ -118,4 +118,10 @@ test('agents that read diffs or test output bypass RTK filtering', () => {
 
 test('lintPlugin reports no problems for uc-core', () => {
   assert.deepEqual(lintPlugin(pluginDir), []);
+});
+
+test('release-gate records the working-tree fingerprint with the hook script', () => {
+  const text = read('release-gate');
+  assert.ok(text.includes('node "${CLAUDE_PLUGIN_ROOT}/hooks/fingerprint.mjs"'));
+  assert.ok(text.includes('"tree"'));
 });
