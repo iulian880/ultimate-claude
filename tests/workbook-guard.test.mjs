@@ -48,23 +48,29 @@ test('mv, rm, redirect and python script arguments are targets', () => {
   assert.deepEqual(bash('npm test; git status'), []);
 });
 
-test('backup older than startedAt does not count; newer does; wrong name does not', () => {
+test('backup made before the session start does not count; one made after does; wrong name does not', () => {
   const proj = tmp('uc wb proj ');
   const dir = path.join(proj, 'backups');
   fs.mkdirSync(dir);
-  const started = new Date('2026-11-17T10:00:00Z');
-  const make = (name, when) => {
-    const f = path.join(dir, name);
-    fs.writeFileSync(f, 'x');
-    fs.utimesSync(f, when, when);
-  };
-  make('Robot SAP v3.20261117-090000.xlsm', new Date('2026-11-17T09:00:00Z'));
-  assert.equal(hasFreshBackup('livrabile/Robot SAP v3.xlsm', proj, started.toISOString()), false);
-  make('Robot SAP v3 copy.xlsm', new Date('2026-11-17T11:00:00Z'));
-  assert.equal(hasFreshBackup('livrabile/Robot SAP v3.xlsm', proj, started.toISOString()), false);
-  make('Robot SAP v3.20261117-110000.xlsm', new Date('2026-11-17T11:00:00Z'));
-  assert.equal(hasFreshBackup('livrabile/Robot SAP v3.xlsm', proj, started.toISOString()), true);
-  assert.equal(hasFreshBackup('missing.xlsm', tmp('uc wb empty '), started.toISOString()), false);
+  fs.writeFileSync(path.join(dir, 'Robot SAP v3.20261117-090000.xlsm'), 'x');
+  fs.writeFileSync(path.join(dir, 'Robot SAP v3 copy.xlsm'), 'x');
+  const future = new Date(Date.now() + 60_000).toISOString();
+  const past = new Date(Date.now() - 60_000).toISOString();
+  assert.equal(hasFreshBackup('livrabile/Robot SAP v3.xlsm', proj, future), false);
+  assert.equal(hasFreshBackup('livrabile/Robot SAP v3.xlsm', proj, past), true);
+  fs.rmSync(path.join(dir, 'Robot SAP v3.20261117-090000.xlsm'));
+  assert.equal(hasFreshBackup('livrabile/Robot SAP v3.xlsm', proj, past), false, 'wrong name must not count');
+  assert.equal(hasFreshBackup('missing.xlsm', tmp('uc wb empty '), past), false);
+});
+
+test('a backup copied with cp -p (old modification time) after the session start counts', () => {
+  const proj = tmp('uc wb cp-p ');
+  fs.mkdirSync(path.join(proj, 'backups'));
+  const f = path.join(proj, 'backups', 'Book 1.20261117-150000.xlsm');
+  fs.writeFileSync(f, 'x');
+  const old = new Date('2020-01-01T00:00:00Z');
+  fs.utimesSync(f, old, old);
+  assert.equal(hasFreshBackup('Book 1.xlsm', proj, new Date(Date.now() - 60_000).toISOString()), true);
 });
 
 function runGuard(input, { profile, base }) {
