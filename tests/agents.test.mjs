@@ -43,7 +43,49 @@ test('architect compares on the eight Intelligent Complexity criteria and writes
 
 test('release-gate documents the verification file and its schema keys', () => {
   const text = read('release-gate');
-  for (const word of ['.uc/verification/', 'verdict', '"at"', 'checks', 'unverified']) {
+  for (const word of ['.uc/verification/', 'verdict', '"at"', 'checks', 'unverified', '"criteria"']) {
+    assert.ok(text.includes(word), word);
+  }
+});
+
+test('release-gate example proof is valid JSON with per-criterion statuses', () => {
+  const block = /```json\n([\s\S]*?)```/.exec(read('release-gate'));
+  assert.ok(block, 'json example missing');
+  const proof = JSON.parse(block[1]);
+  assert.deepEqual(Object.keys(proof).sort(), ['at', 'checks', 'criteria', 'unverified', 'verdict']);
+  for (const c of proof.criteria) {
+    assert.ok(['VERIFIED', 'FAILED', 'NOT PERFORMED'].includes(c.status), c.status);
+    for (const i of c.checks) assert.ok(proof.checks[i], `criterion points to missing check ${i}`);
+  }
+});
+
+test('release-gate runs baseline checks, bans hedging words and gives a next step for gaps', () => {
+  const text = read('release-gate').toLowerCase();
+  for (const word of ['baseline', 'build', 'type check', 'lint', 'not performed', 'next step', 'probably']) {
+    assert.ok(text.includes(word), word);
+  }
+});
+
+test('code-reviewer filters by confidence, reads project rules and ends with a verdict', () => {
+  const text = read('code-reviewer');
+  for (const word of ['confidence', '80', 'CLAUDE.md', '.claude/rules', 'APPROVE', 'BLOCK', 'Set aside',
+    'Not findings', 'pre-existing']) {
+    assert.ok(text.includes(word), word);
+  }
+});
+
+test('architect uses distinct design constraints, file:line evidence, an ADR test and a blueprint', () => {
+  const text = read('architect');
+  for (const word of ['file:line', 'deletion test', 'hard to reverse', 'GLOSSARY.md', 'blueprint',
+    'ports and adapters']) {
+    assert.ok(text.toLowerCase().includes(word.toLowerCase()), word);
+  }
+});
+
+test('qa-engineer names the break, checks mutations, reruns new tests and scores criticality', () => {
+  const text = read('qa-engineer').toLowerCase();
+  for (const word of ['name the production change', 'by hand', 'mutation check', 'three times', 'criticality',
+    'never assert on the mock', 'baseline', 'end-to-end']) {
     assert.ok(text.includes(word), word);
   }
 });

@@ -46,7 +46,9 @@ scope), 2026-11-17. Total at session start: 58.5k of 1M tokens.
 | **Custom agents, total** | **461** |
 | Skills, all sources together | 6.3k |
 
-The agent baseline is 461 tokens. The share of the four `uc-core` skills inside the 6.3k "Skills" line was not
+The agent baseline is 461 tokens. On the same day the four agents were rewritten with techniques adopted from
+public agents (see README, Credits); their descriptions grew from 1299 to 1564 characters in total, roughly
+65 more tokens. The new figure has not been measured. The share of the four `uc-core` skills inside the 6.3k "Skills" line was not
 visible (that section was not expanded), so the skill baseline is still open.
 
 This also shows that the desktop app loads the plugin's agents from a project-scope install.
