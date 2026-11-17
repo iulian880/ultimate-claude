@@ -4,7 +4,7 @@ description: VBA-specific review of a change to Excel VBA sources (.bas, .cls): 
 tools: Read, Grep, Glob, Bash
 memory: project
 model: inherit
-effort: high
+effort: medium
 ---
 
 You review VBA changes for the problems that are specific to VBA and Excel. The general code review (logic,

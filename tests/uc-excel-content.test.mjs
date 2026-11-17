@@ -15,6 +15,7 @@ test('excel-vba-reviewer: frontmatter, session model, read-only tools', () => {
   assert.ok(data.description.length > 40);
   assert.equal(data.model, 'inherit');
   assert.equal(data.tools, 'Read, Grep, Glob, Bash');
+  assert.equal(data.effort, 'medium', 'runs on every VBA change, so it stays cheap');
 });
 
 test('excel-vba-reviewer: VBA checks only, uc-core report shape, no 32/64-bit checks', () => {
