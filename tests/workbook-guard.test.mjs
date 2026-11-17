@@ -29,7 +29,7 @@ test('Write to a .xlsm is a target; Write to a .bas is not', () => {
 
 test('quoted path with spaces is one target: cp a.xlsm "livrabile/Robot SAP v3.xlsm"', () => {
   assert.deepEqual(bash('cp a.xlsm "livrabile/Robot SAP v3.xlsm"'), ['livrabile/Robot SAP v3.xlsm']);
-  assert.deepEqual(bash("cp -p 'x y.xlsb' backups/"), []);
+  assert.deepEqual(bash("cp -p 'x y.xlsb' backups/"), ['backups/x y.xlsb']); // exempted later as the backup itself
 });
 
 test('read-only commands are not targets', () => {
@@ -44,7 +44,7 @@ test('mv, rm, redirect and python script arguments are targets', () => {
   assert.deepEqual(bash('rm -f "Robot SAP v3.xlsm"'), ['Robot SAP v3.xlsm']);
   assert.deepEqual(bash('cat x > out.xlsm'), ['out.xlsm']);
   assert.deepEqual(bash('cd tools && python3 -I build_v3.py original_v2.xlsm v.bin "../livrabile/Robot SAP v3.xlsm"'),
-    ['original_v2.xlsm', '../livrabile/Robot SAP v3.xlsm']);
+    ['tools/original_v2.xlsm', 'livrabile/Robot SAP v3.xlsm']);
   assert.deepEqual(bash('npm test; git status'), []);
 });
 
@@ -76,6 +76,7 @@ test('a backup copied with cp -p (old modification time) after the session start
 function runGuard(input, { profile, base }) {
   const env = { ...process.env, CLAUDE_CONFIG_DIR: base };
   if (profile) env.UC_PROFILE = profile; else delete env.UC_PROFILE;
+  delete env.CLAUDE_PROJECT_DIR;
   return spawnSync(process.execPath, [path.join(hooks, 'workbook-guard.mjs')], {
     input: JSON.stringify(input), encoding: 'utf8', env,
   });
@@ -152,4 +153,44 @@ test('CLI strict: writing the backup itself and creating a new workbook need no 
   const write = runGuard({ session_id: 'nb', cwd: proj, tool_name: 'Write', tool_input: { file_path: path.join(proj, 'Book 1.xlsm') } },
     { profile: 'strict', base });
   assert.equal(write.status, 2);
+});
+
+test('PowerShell keeps backslashes; bash keeps them inside double quotes', () => {
+  assert.deepEqual(workbookTargets('PowerShell', { command: 'Copy-Item a.txt -Destination "livrabile\\Robot SAP v3.10.xlsm"' }),
+    ['livrabile\\Robot SAP v3.10.xlsm']);
+  assert.deepEqual(bash('rm "livrabile\\a.xlsm"'), ['livrabile\\a.xlsm']);
+  assert.deepEqual(bash('rm "say \\"hi\\".xlsm"'), ['say "hi".xlsm']);
+});
+
+test('cd changes where later paths point; >| is a redirect', () => {
+  assert.deepEqual(bash('cd livrabile && rm a.xlsm'), ['livrabile/a.xlsm']);
+  assert.deepEqual(bash('cd livrabile; cd ..; rm b.xlsm'), ['b.xlsm']);
+  assert.deepEqual(bash('echo x >| out.xlsm'), ['out.xlsm']);
+});
+
+test('copy into a directory and paths inside inline scripts are targets', () => {
+  assert.deepEqual(bash('cp new.xlsm livrabile/'), ['livrabile/new.xlsm']);
+  assert.deepEqual(bash("python3 -c \"import openpyxl; wb = openpyxl.load_workbook('x.xlsm'); wb.save('x.xlsm')\""), ['x.xlsm']);
+});
+
+test('CLI strict: globs and cd are caught; backups are found at the project root from a subfolder', () => {
+  const base = tmp('uc wb cfg ');
+  const proj = tmp('uc wb glob ');
+  updateSession('gl', { startedAt: new Date(Date.now() - 60_000).toISOString() }, { CLAUDE_CONFIG_DIR: base });
+  fs.mkdirSync(path.join(proj, 'livrabile'));
+  fs.mkdirSync(path.join(proj, 'tools'));
+  fs.writeFileSync(path.join(proj, 'livrabile', 'a.xlsm'), 'x');
+  const run = (command, cwd, projectDir) => {
+    const env = { ...process.env, CLAUDE_CONFIG_DIR: base, UC_PROFILE: 'strict' };
+    if (projectDir) env.CLAUDE_PROJECT_DIR = projectDir; else delete env.CLAUDE_PROJECT_DIR;
+    return spawnSync(process.execPath, [path.join(hooks, 'workbook-guard.mjs')], {
+      input: JSON.stringify({ session_id: 'gl', cwd, tool_name: 'Bash', tool_input: { command } }), encoding: 'utf8', env,
+    });
+  };
+  assert.equal(run('rm livrabile/*.xlsm', proj).status, 2);
+  assert.equal(run('cd livrabile && rm a.xlsm', proj).status, 2);
+  fs.mkdirSync(path.join(proj, 'backups'));
+  fs.writeFileSync(path.join(proj, 'backups', 'a.20261117-150000.xlsm'), 'x');
+  assert.equal(run('rm ../livrabile/a.xlsm', path.join(proj, 'tools'), proj).status, 0);
+  assert.equal(run('rm livrabile/*.xlsm', proj).status, 0);
 });
