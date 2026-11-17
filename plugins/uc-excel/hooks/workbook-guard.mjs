@@ -11,8 +11,11 @@ const WORKBOOK = /\.(xlsm|xlsb|xlam)$/i;
 const EMBEDDED = /[^\s'"(),=;]+\.(?:xlsm|xlsb|xlam)\b/gi;
 const SEPARATORS = new Set([';', '&&', '||', '|', '&', '\n']);
 const REDIRECTS = new Set(['>', '>>', '>|', '&>']);
-const READ_ONLY = new Set(['ls', 'zipinfo', 'shasum', 'md5', 'md5sum', 'sha1sum', 'sha256sum', 'cmp', 'diff', 'file', 'stat']);
-const UNZIP_READ = /^-[a-zA-Z]*[lpvtZ]/;
+// Commands that only read the workbooks they name (unzip extracts elsewhere and never changes the archive).
+const READ_ONLY = new Set(['ls', 'zipinfo', 'unzip', 'shasum', 'md5', 'md5sum', 'sha1sum', 'sha256sum', 'cmp', 'diff',
+  'file', 'stat', 'cat', 'head', 'tail', 'xxd', 'hexdump', 'strings', 'wc', 'olevba', 'oleid', 'olemeta']);
+// git subcommands that do not change files in the working tree (checkout, restore, reset, mv, rm do).
+const GIT_READ_ONLY = new Set(['add', 'diff', 'log', 'show', 'status', 'ls-files', 'blame', 'commit']);
 const BASH_DQ_ESCAPES = new Set(['"', '\\', '$', '`', '\n']);
 const NO_SESSION_START_MS = 12 * 60 * 60 * 1000;
 
@@ -79,7 +82,7 @@ function segmentTargets(seg) {
   if (cmd === 'cd') return { cd: args.find((a) => !a.startsWith('-')) ?? '' };
   const redirected = workbooks(redirects);
   if (READ_ONLY.has(cmd)) return { targets: redirected };
-  if (cmd === 'unzip' && args.some((a) => UNZIP_READ.test(a))) return { targets: redirected };
+  if (cmd === 'git' && GIT_READ_ONLY.has(args.find((a) => !a.startsWith('-')))) return { targets: redirected };
   if (cmd === 'cp' || cmd === 'rsync') {
     const operands = args.filter((a) => !a.startsWith('-'));
     const dest = operands.at(-1) ?? '';
