@@ -115,7 +115,13 @@ export function handle(input) {
   if (targets.length === 0) return { exit: 0 };
   const projectDir = typeof input.cwd === 'string' ? input.cwd : process.cwd();
   const { startedAt } = readSession(input.session_id);
-  const missing = targets.filter((t) => !hasFreshBackup(t, projectDir, startedAt)).map((t) => path.basename(t));
+  const backups = path.join(projectDir, 'backups') + path.sep;
+  // Nothing to lose: the backup copy itself, and a workbook that does not exist yet.
+  const atRisk = targets.filter((t) => {
+    const full = path.resolve(projectDir, t);
+    return !full.startsWith(backups) && fs.existsSync(full);
+  });
+  const missing = atRisk.filter((t) => !hasFreshBackup(t, projectDir, startedAt)).map((t) => path.basename(t));
   if (missing.length === 0) return { exit: 0 };
   const files = missing.join(', ');
   if (resolveProfile({ sessionId: input.session_id }) === 'strict') {
