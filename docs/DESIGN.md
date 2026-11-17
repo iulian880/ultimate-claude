@@ -1,6 +1,6 @@
 # Ultimate Claude Code Setup V2 — design
 
-Data: 16 noiembrie 2026. Stare: **aprobat de utilizator pe 17.11.2026, cu o schimbare: agentul propriu `code-reviewer` rămâne**. Nimic din acest document nu a fost instalat sau testat.
+Data: 16 noiembrie 2026. Stare: **aprobat de utilizator pe 17.11.2026, cu o schimbare: agentul propriu `code-reviewer` rămâne**. Implementat de atunci: `uc-core` (Planurile 1 și 1b), migrarea Mac-ului (Planul 2) și `uc-excel` (Planul 4); ce s-a verificat, cum și ce a rămas neverificat e în `docs/verification/`. `uc-web`, installerul și benchmark-ul nu sunt încă făcute.
 Înlocuiește `SETUP-SPEC.md` (v3) după aprobare. Sursele auditului: patru cercetări web din 16.11.2026 (versiuni și linkuri în Anexa A).
 
 ## 1. Intenție
@@ -76,7 +76,7 @@ ultimate-claude/
 Hooks-urile și installerul se scriu în **Node.js** (un singur cod pentru Mac și Windows; Node ≥ 22 e oricum cerut de
 Context7 CLI și Playwright CLI). *Decizia mea — vezi §12.*
 
-### 5.2 `uc-core` (activ global)
+### 5.2 `uc-core` (activ pe proiect; vezi §9)
 
 | Tip | Nume | Rol |
 |---|---|---|
@@ -88,7 +88,7 @@ Context7 CLI și Playwright CLI). *Decizia mea — vezi §12.*
 | Skill | `product-discovery` | întrebări de produs înainte de brainstorm (utilizator, problemă, alternativă existentă, criteriu de succes) — idei preluate din gstack, rescrise, fără instalarea lui |
 | Skill | `delivery-report` | raportul final: ce s-a făcut, ce s-a verificat și cum, ce a rămas neverificat |
 | Skill | `uc-profile` | explică profilul activ și ce impune |
-| Hook | `block-destructive` | mutat din setup-ul global actual în plugin (PreToolUse) |
+| Hook | `block-destructive` | PreToolUse, în plugin; varianta globală veche rămâne până la installer (vezi §9) |
 | Hook | `profile-gate` | în STRICT: la Stop/TaskCompleted cere dovada de verificare înainte de „gata"; în MINIMAL/STANDARD nu face nimic |
 
 Review-ul de securitate rămâne la comanda nativă `/security-review` (plus pluginul `security-guidance` deja instalat) —
@@ -249,10 +249,14 @@ activarea pe tip de proiect se face nativ, prin `enabledPlugins` în `.claude/se
 template (`uc-web` în proiectele web, `uc-excel` în cele Excel, Planning with Files unde e nevoie). Designul nu depinde
 de niciun spike pentru asta.
 
-**Dovada de verificare** (ce verifică `profile-gate` în STRICT): agentul `release-gate` scrie
-`.uc/verification/<timestamp>.json` cu comenzile rulate, codurile de ieșire și verdictul. Un hook PostToolUse notează ora
-ultimei editări din sesiune. La Stop, dacă există editări mai noi decât ultimul verdict PASS, hook-ul blochează o singură
-dată cu mesajul „rulează release-gate"; a doua oprire trece (fără bucle) și e consemnată în `delivery-report` ca neverificată.
+**Dovada de verificare** (ce verifică `profile-gate` în STRICT; revizuit pe 18.11.2026 după audit): când sesiunea intră în
+STRICT, un hook notează amprenta codului (într-un proiect git: hash-ul arborelui a tot ce ar intra într-un commit, fără
+`.uc/`), deci contează orice editare, inclusiv prin Bash sau scripturi. Agentul `release-gate` scrie
+`.uc/verification/<timestamp>.json` cu comenzile rulate, codurile de ieșire, criteriile, verdictul și `tree` = amprenta
+codului verificat. La Stop, dacă amprenta s-a schimbat și nicio dovadă PASS validă (verificări trecute, toate criteriile
+VERIFIED) nu are exact amprenta curentă, hook-ul blochează o dată pentru starea respectivă; a doua oprire pe aceeași stare
+trece (fără bucle) și e consemnată în `delivery-report` ca neverificată. În afara git rămâne regula veche: ora ultimei
+editări Edit/Write față de cel mai nou PASS.
 
 ## 8. Installer
 
