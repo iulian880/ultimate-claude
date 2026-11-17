@@ -7,7 +7,7 @@ Every change under `~/.claude` was made after the user's explicit yes for that i
 
 | Item | State | Backup | Restore command |
 |---|---|---|---|
-| `~/.claude/CLAUDE.md` | replaced with `installer/proposals/global-claude-md.md` | `~/.claude/backups/2026-11-17/CLAUDE.md` | `cp ~/.claude/backups/2026-11-17/CLAUDE.md ~/.claude/CLAUDE.md` |
+| `~/.claude/CLAUDE.md` | replaced with `installer/proposals/global-claude-md.md`, then updated once more after the final review (MINIMAL override, projects without uc-core) | v3 original: `~/.claude/backups/2026-11-17/CLAUDE.md`; first V2 version: `~/.claude/backups/2026-11-17/CLAUDE.md.v2-110305` | v3: `cp ~/.claude/backups/2026-11-17/CLAUDE.md ~/.claude/CLAUDE.md` |
 | `~/.claude/PLAYBOOK.md` | archived | `~/.claude/backups/2026-11-17/PLAYBOOK.md` | `mv ~/.claude/backups/2026-11-17/PLAYBOOK.md ~/.claude/PLAYBOOK.md` |
 | `~/.claude/hooks/notirelay-exe.sh` | archived (no settings file referenced it; project absent) | `~/.claude/backups/2026-11-17/hooks/notirelay-exe.sh` | `mv ~/.claude/backups/2026-11-17/hooks/notirelay-exe.sh ~/.claude/hooks/` |
 | RTK (`@RTK.md`, hook, binary) | kept (user decision) | — | — |
@@ -24,8 +24,10 @@ Every change under `~/.claude` was made after the user's explicit yes for that i
 | Installed file equals the proposal | `cmp` identical |
 | Rollback rehearsal (backup copied to the scratchpad) | `cmp` identical |
 | Live: `claude -p --model haiku` in a scratch repo, asked for the global H1 and RTK | quoted `# Global working rules (ultimate-claude V2)` and confirmed the RTK "Command output" section is loaded |
+| Live, after the review fixes | quoted the H1, quoted the rule starting `Where uc-core is not enabled`, confirmed RTK loaded |
 | Archived files | each source gone, each destination present (`ls`) |
-| `npm test` | 84 passed, 0 failed |
+| `npm test` | 86 passed, 0 failed (after the review fixes) |
+| Final review (fresh Opus reviewer) | "with fixes": two important findings fixed test-first; six minor findings deferred |
 | `node scripts/lint-plugin.mjs plugins/uc-core` | `OK: plugins/uc-core` |
 | `claude plugin list` (from this repo) | `superpowers` user scope enabled; `uc-core` and `security-guidance` project scope, disabled here as expected (enabled only in `Robot SAP`) |
 
