@@ -88,9 +88,20 @@ test('qa-engineer owns test strategy and leaves test-writing technique to Superp
   for (const word of ['superpowers:test-driven-development', 'three times', 'criticality', 'baseline', 'end-to-end']) {
     assert.ok(text.includes(word), word);
   }
-  for (const copied of ['mutation check', 'expected values by hand', 'never assert on the mock']) {
+  for (const copied of ['wrong constant', 'expected values by hand', 'never assert on the mock']) {
     assert.ok(!text.includes(copied), `restates Superpowers TDD: ${copied}`);
   }
+});
+
+test('qa-engineer can load the TDD skill and proves tests without breaking product code', () => {
+  const text = read('qa-engineer');
+  assert.match(parseFrontmatter(text).tools, /\bSkill\b/);
+  assert.ok(text.includes('writing-good-tests.md'));
+  assert.ok(text.includes('watch a test go red'));
+});
+
+test('code-reviewer accepts Superpowers findings re-graded to deferred minors', () => {
+  assert.ok(read('code-reviewer').includes('re-graded'));
 });
 
 test('architect runs after brainstorming and does not redo the user-facing choice', () => {

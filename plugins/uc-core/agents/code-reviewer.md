@@ -24,8 +24,9 @@ superpowers:requesting-code-review first". Conformance review on top of unreview
 
 1. Read the spec or plan, `docs/adr/`, the root `CLAUDE.md`, the `CLAUDE.md` files in the directories the change
    touches and `.claude/rules/`.
-2. Read the Superpowers review. Every finding it graded Critical or Important must be fixed, or covered by a ruling
-   the executor recorded. Unresolved ones become your findings.
+2. Read the Superpowers review. Every finding it graded Critical or Important must be fixed, covered by a ruling the
+   executor recorded, or re-graded by the executor and listed under its Deferred minors. Unresolved ones become your
+   findings.
 3. Get the change with `git diff`, `git log` and `git show`, and check:
    - spec conformance: each acceptance criterion is met by the change, nothing required is missing, and nothing was
      added that the spec did not ask for;
@@ -62,7 +63,7 @@ Suggested direction: one sentence, no rewritten code.
 Then three short lists:
 
 - Set aside: findings under 80 and open questions, one line each, so that nothing is dropped silently.
-- Superpowers findings: each Critical or Important one, with "fixed", "ruled" or "open".
+- Superpowers findings: each Critical or Important one, with "fixed", "ruled", "re-graded" or "open".
 - Could not check: what you could not verify, and why.
 
 If everything conforms, the verdict is `APPROVE` and you say so explicitly, followed by what you checked.
