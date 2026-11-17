@@ -11,10 +11,24 @@ test('first line is the @RTK.md import', () => {
   assert.equal(lines()[0], '@RTK.md');
 });
 
-test('block is at most 35 lines without the import', () => {
+test('block is at most 40 lines without the import', () => {
   const body = lines().slice(1);
   while (body[0] === '') body.shift();
-  assert.ok(body.length <= 35, `block has ${body.length} lines`);
+  assert.ok(body.length <= 40, `block has ${body.length} lines`);
+});
+
+test('execution is chosen by uc-core rules and the user choice wins', () => {
+  for (const phrase of ['## Execution (uc-core decides, Superpowers runs it)', "The user's explicit choice wins",
+    '4+ mostly independent tasks', 'ties go to inline', 'never use a pricier model']) {
+    assert.ok(text().includes(phrase), phrase);
+  }
+  assert.ok(!text().includes('only when the user asks'));
+});
+
+test('reviews are split between Superpowers and uc-core conformance', () => {
+  const standard = lines().find((l) => l.startsWith('| STANDARD'));
+  assert.ok(standard.includes('Superpowers reviews'), standard);
+  assert.ok(standard.includes('`code-reviewer` (conformance)'), standard);
 });
 
 test('keeps precedence, verification, delegation and language rules', () => {

@@ -11,13 +11,19 @@
 | Profile | When | Process | Review |
 |---|---|---|---|
 | MINIMAL | typo, rename, a fix inside one function | do it directly, then one check | none |
-| STANDARD | everyday development | Superpowers: brainstorming, writing-plans, executing-plans (inline), verification | `code-reviewer` |
-| STRICT | critical systems, migrations, important VBA, security, data | STANDARD + `architect` (ADR) + `qa-engineer` | `code-reviewer`, `/security-review`, domain reviewer, `release-gate` |
+| STANDARD | everyday development | Superpowers: brainstorming, writing-plans, execution chosen per plan, verification | Superpowers reviews, `code-reviewer` (conformance) |
+| STRICT | critical systems, migrations, important VBA, security, data | STANDARD + `architect` (ADR) + `qa-engineer` | STANDARD + `/security-review`, domain reviewer, `release-gate` |
 - Work that fits the MINIMAL row is done directly whatever the session profile: no brainstorming or plan, then one
   check. This overrides the Superpowers "skill first" rule.
 - Switch for one session by starting a prompt with `profil <name>`.
-- Where uc-core is not enabled: no profile hooks; review with Superpowers requesting-code-review; skip uc-core agents
-  and skills that are missing, and say so.
+- Where uc-core is not enabled: no profile hooks; review with Superpowers requesting-code-review; say what is missing.
+
+## Execution (uc-core decides, Superpowers runs it)
+- After writing-plans, pick the executor, state it with one reason and start: this is the execution method
+  already supplied. The user's explicit choice wins. Subagents never use a pricier model than the session.
+- subagent-driven-development: 4+ mostly independent tasks AND (STRICT, a long plan, or costly mistakes).
+- executing-plans (inline): otherwise, and always for coupled tasks or steps that need the user's yes or
+  touch files outside the repo. On the Pro plan, ties go to inline.
 
 ## Verification
 - Never claim done without running a check (tests, build, typecheck or screenshot) and showing its output.
@@ -30,7 +36,6 @@
 - Before /batch or a dynamic workflow, state the estimated cost and wait for approval.
 - Read line ranges, not whole files. Navigate with LSP (definitions, references) before grep.
 - Use the uc-core agents where the profile calls for them; do not invent ad-hoc agents; agent teams stay off.
-- Use subagent-driven-development only when the user asks for it.
 
 ## User
 - Speak Romanian with the user; write code, configs and commit messages in English.
