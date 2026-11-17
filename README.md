@@ -4,11 +4,15 @@ Private Claude Code plugin marketplace. Design: [docs/DESIGN.md](docs/DESIGN.md)
 
 ## Plugins
 
-| Plugin | Status | Scope |
-|---|---|---|
-| `uc-core` | Plan 1 | global, or per project |
-| `uc-web` | Plan 3 (not written) | web projects |
-| `uc-excel` | Plan 4 (not written) | Excel/VBA projects |
+| Plugin | Status | Scope | What it has |
+|---|---|---|---|
+| `uc-core` | built (Plans 1, 1b) | per project | agents `architect`, `code-reviewer` (conformance), `qa-engineer`, `release-gate`; skills `complexity-check`, `product-discovery`, `delivery-report`, `uc-profile`; hooks `block-destructive`, `set-profile`, `session-start`, `track-edit`, `profile-gate`; profiles |
+| `uc-excel` | built (Plan 4) | per Excel/VBA project | agent `excel-vba-reviewer`; skill `vba-workflow`; hook `workbook-guard`; template `excel-vba` |
+| `uc-web` | not written (Plan 3) | web projects | — |
+
+Plans are in [docs/plans/](docs/plans/), and what was verified on which machine is in [docs/verification/](docs/verification/).
+`components.lock.json` lists the third-party components with pinned versions; `installer/proposals/global-claude-md.md`
+is the global `CLAUDE.md` block.
 
 ## Use
 
@@ -19,12 +23,20 @@ claude plugin marketplace add "/path/to/ultimate-claude"
 claude plugin install uc-core@ultimate-claude --scope project
 ```
 
+For an Excel/VBA project install `uc-excel` the same way; it depends on `uc-core`.
+
 `uc-core` declares `security-guidance@claude-plugins-official` as a dependency, so installing `uc-core` in a
 project also installs and enables `security-guidance` there, and nowhere else. Its LLM reviews (on every stop
 and every commit) run on Opus with your account; set `ENABLE_CODE_SECURITY_REVIEW=0` in a project's
 `env` to keep only its free pattern warnings.
 
-Try it without installing: `claude --plugin-dir "/path/to/ultimate-claude/plugins/uc-core"`.
+Try it without installing: load the dependencies too, or Claude Code disables the plugin silently
+(`claude --debug` shows "dependency-unsatisfied"):
+
+```bash
+claude --plugin-dir ~/.claude/plugins/cache/claude-plugins-official/security-guidance/<version> \
+  --plugin-dir "/path/to/ultimate-claude/plugins/uc-core" --plugin-dir "/path/to/ultimate-claude/plugins/uc-excel"
+```
 
 ## Profiles
 

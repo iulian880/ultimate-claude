@@ -1,7 +1,8 @@
 # ultimate-claude — target file structure
 
 Copy this kit (`STRUCTURE.md` + `docs/`) into an empty folder or a new repo, then execute `docs/plans/01-uc-core.md`.
-The number in brackets is the plan that creates each item. Only Plan 1 is written; Plans 2–6 are outlined below.
+The number in brackets is the plan that creates each item. Plans 1, 1b, 2 and 4 are written and executed; Plans 3, 5
+and 6 are outlined below. What was verified is in `docs/verification/`.
 
 ```
 ultimate-claude/
@@ -19,7 +20,7 @@ ultimate-claude/
 ├── scripts/
 │   └── lint-plugin.mjs                       [1] structure/frontmatter linter for any plugin dir
 ├── plugins/
-│   ├── uc-core/                              [1] active globally
+│   ├── uc-core/                              [1] enabled per project
 │   │   ├── .claude-plugin/plugin.json
 │   │   ├── agents/
 │   │   │   ├── architect.md
@@ -35,11 +36,14 @@ ultimate-claude/
 │   │   │   ├── hooks.json
 │   │   │   ├── block-destructive.mjs         PreToolUse (Bash, PowerShell)
 │   │   │   ├── set-profile.mjs               UserPromptSubmit
+│   │   │   ├── session-start.mjs             SessionStart: start fingerprint for STRICT [1b]
+│   │   │   ├── fingerprint.mjs               prints the working-tree fingerprint for release-gate [1b]
 │   │   │   ├── track-edit.mjs                PostToolUse (Edit|Write|NotebookEdit)
-│   │   │   ├── profile-gate.mjs              Stop (STRICT only)
+│   │   │   ├── profile-gate.mjs              Stop (STRICT only): PASS must match the code fingerprint
 │   │   │   └── lib/
 │   │   │       ├── hook-io.mjs
 │   │   │       ├── state.mjs
+│   │   │       ├── fingerprint.mjs
 │   │   │       └── verification.mjs
 │   │   └── profiles/
 │   │       ├── minimal.json
@@ -87,10 +91,11 @@ ultimate-claude/
 └── docs/
     ├── DESIGN.md                             [kit] approved design (Romanian)
     ├── plans/
-    │   ├── 01-uc-core.md                     [kit] ready to execute
-    │   ├── 02-mac-migration.md               to be written after Plan 1 is verified
+    │   ├── 01-uc-core.md                     [kit] executed
+    │   ├── 01b-superpowers-roles.md          executed: uc-core and Superpowers roles
+    │   ├── 02-mac-migration.md               executed
     │   ├── 03-uc-web.md
-    │   ├── 04-uc-excel.md
+    │   ├── 04-uc-excel.md                    executed
     │   ├── 05-installer.md
     │   └── 06-benchmark-windows.md
     ├── adr/                                  [1] 0001 plugins in a private marketplace, 0002 Node hooks and installer
