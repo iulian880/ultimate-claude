@@ -3,6 +3,7 @@
   "owner": {
     "name": "ultimate-claude"
   },
+  "allowCrossMarketplaceDependenciesOn": ["claude-plugins-official"],
   "metadata": {
     "description": "Private marketplace for the Ultimate Claude Code setup: uc-core, later uc-web and uc-excel."
   },
