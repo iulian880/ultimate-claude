@@ -60,6 +60,8 @@ and if neither sets it, the profile is STANDARD.
 - The `release-gate` agent writes its proof to `.uc/verification/<timestamp>.json` in the project root. It counts
   only when complete: PASS, every check passed, at least one criterion and all VERIFIED, nothing left unverified,
   the same fingerprint before and after the checks, and that fingerprint equal to the current code.
+- The fingerprint does not see changes inside git submodules or nested repositories, in files marked
+  `assume-unchanged` or `skip-worktree`, or in ignored files. Verify those by hand.
 - When you try to stop and the code changed with no such proof, the stop is blocked once with:
   "STRICT profile: the code changed in this session and no PASS verification matches it."
   Outside git the gate falls back to the time of the last Edit/Write against the newest PASS.
