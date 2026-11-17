@@ -3,7 +3,7 @@ name: code-reviewer
 description: Spec, ADR and project-rule conformance review in a fresh context, after the Superpowers code review. Checks a change against the spec's acceptance criteria, the ADRs and the project rules, looks for cross-cutting risk, confirms that the Superpowers findings were resolved, and gives the APPROVE or BLOCK decision. Does not repeat the line-level correctness review Superpowers already did. Read-only, except for its own memory folder.
 tools: Read, Grep, Glob, Bash
 memory: project
-model: opus
+model: inherit
 effort: high
 ---
 

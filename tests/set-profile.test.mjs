@@ -51,3 +51,9 @@ test('CLI with empty stdin exits 0 and writes nothing', () => {
   assert.equal(result.stdout, '');
   assert.deepEqual(fs.readdirSync(base), []);
 });
+
+test('a question that starts with a profile name does not switch the profile (audit 2026-11-18)', () => {
+  assert.equal(detectProfile('Profile standard is slow, why?'), null);
+  assert.equal(detectProfile('profil strict e mai lent?'), null);
+  assert.equal(detectProfile('profil strict\nDe ce e lent testul?'), 'strict');
+});

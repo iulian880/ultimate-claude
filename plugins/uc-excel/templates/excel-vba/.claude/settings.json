@@ -4,6 +4,8 @@
     "uc-excel@ultimate-claude": true
   },
   "env": {
-    "UC_PROFILE": "standard"
+    "UC_PROFILE": "standard",
+    "ENABLE_CODE_SECURITY_REVIEW": "0",
+    "UC_EXCEL_READ_ONLY": ""
   }
 }

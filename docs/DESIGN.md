@@ -92,7 +92,7 @@ Context7 CLI și Playwright CLI). *Decizia mea — vezi §12.*
 | Skill | `delivery-report` | raportul final: ce s-a făcut, ce s-a verificat și cum, ce a rămas neverificat |
 | Skill | `uc-profile` | explică profilul activ și ce impune |
 | Hook | `block-destructive` | PreToolUse, în plugin; varianta globală veche rămâne până la installer (vezi §9) |
-| Hook | `profile-gate` | în STRICT: la Stop/TaskCompleted cere dovada de verificare înainte de „gata"; în MINIMAL/STANDARD nu face nimic |
+| Hook | `profile-gate` | în STRICT: la Stop cere dovada de verificare înainte de „gata"; în MINIMAL/STANDARD nu face nimic |
 
 Review-ul de securitate rămâne la comanda nativă `/security-review` (plus pluginul `security-guidance` deja instalat) —
 nu scriem agent propriu pentru el. Review-ul de cod (pe task în SDD și final, pe tot branch-ul) îl face Superpowers;
@@ -243,7 +243,7 @@ Mecanism (gândit pentru aplicația desktop, suprafața principală a utilizator
 Hooks-urile află profilul în această ordine:
 1. marcajul de sesiune `~/.claude/uc/sessions/<session_id>.json`, scris de skill-ul `uc-profile` când utilizatorul spune
    „profil STRICT" (hooks-urile primesc `session_id` la fiecare apel);
-2. `env.UC_PROFILE` din `.claude/settings.local.json` al proiectului (profilul implicit al proiectului, pus de template);
+2. `env.UC_PROFILE` din `.claude/settings.json` al proiectului (profilul implicit al proiectului, pus de template);
 3. altfel STANDARD.
 
 În terminal există în plus lansatoarele `uc minimal|standard|strict`, care pornesc `claude --settings profiles/<profil>.json`

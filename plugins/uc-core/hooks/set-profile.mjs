@@ -10,6 +10,8 @@ const PATTERN = /^\s*(?:uc\s+)?profile?\s+(minimal|standard|strict)\b/i;
 /** Returns the profile named at the start of the prompt, or null. */
 export function detectProfile(prompt) {
   if (typeof prompt !== 'string') return null;
+  // A question about a profile ("Profile standard is slow, why?") is not a command to switch.
+  if (prompt.split('\n', 1)[0].trim().endsWith('?')) return null;
   const m = PATTERN.exec(prompt);
   return m ? m[1].toLowerCase() : null;
 }

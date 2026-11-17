@@ -22,7 +22,8 @@ project's `CLAUDE.md` gives the exact commands; this skill gives the order and w
 4. **Build.** Build only the variant the project declares as the deliverable (its `CLAUDE.md` names it). A build that
    fails stops the workflow.
 5. **Compile check.** Run the project's compile check on the built workbook. A syntax or compile error stops the
-   workflow.
+   workflow. A check that only reads the workbook belongs in the project's `UC_EXCEL_READ_ONLY` setting, so the
+   `workbook-guard` hook does not treat it as a write.
 6. **Tests.** Run every existing test. New behaviour gets a new test; tests whose expected behaviour changed are
    updated, never weakened to pass. Write tests following superpowers:test-driven-development when it is installed.
 7. **User documentation.** Update the single user documentation file the project names (for example `GHID.md`).
@@ -33,9 +34,10 @@ whole output.
 
 ## After the seven steps
 
-- Run the `excel-vba-reviewer` agent on the change. Its report goes to the review that follows.
-- Then the normal review path: the Superpowers code review, then the uc-core `code-reviewer` conformance review
-  before finishing the branch (where uc-core is enabled).
+- Run the `excel-vba-reviewer` agent on the change, in every profile.
+- Then the review the session profile asks for: nothing more in MINIMAL; in STANDARD and STRICT the Superpowers code
+  review, then the uc-core `code-reviewer` conformance review before finishing the branch (where uc-core is enabled).
+  The VBA reviewer's report goes to that review.
 - The delivery report lists the commands of steps 3 to 6 with their real results.
 
 ## What "verified" means here

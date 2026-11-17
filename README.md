@@ -45,7 +45,7 @@ claude --plugin-dir ~/.claude/plugins/cache/claude-plugins-official/security-gui
 ## Profiles
 
 `MINIMAL`, `STANDARD` (default), `STRICT`. Switch for one session by starting a prompt with `profil strict`
-(or `profile strict`), per project with `env.UC_PROFILE` in `.claude/settings.local.json`, or from a terminal with
+(or `profile strict`), per project with `env.UC_PROFILE` in `.claude/settings.json`, or from a terminal with
 `bin/uc strict`. See the `uc-profile` skill.
 
 ## Credits

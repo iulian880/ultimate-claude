@@ -24,6 +24,10 @@ function projectWith(files) {
 const EDIT = '2026-11-17T10:00:00.000Z';
 const BEFORE = '2026-11-17T09:00:00.000Z';
 const AFTER = '2026-11-17T11:00:00.000Z';
+const COMPLETE = {
+  verdict: 'PASS', checks: [{ command: 'npm test', exitCode: 0, summary: 'ok' }],
+  criteria: [{ criterion: '1. c', status: 'VERIFIED', checks: [0] }], unverified: [],
+};
 const strict = { profile: 'strict', lastEditAt: EDIT, latestPassAt: null, stopHookActive: false, gateBlockedAt: undefined };
 
 test('standard and minimal never block', () => {
@@ -71,8 +75,8 @@ test('latestPassAt ignores malformed JSON and verdict FAIL', () => {
 
 test('latestPassAt returns the newest PASS', () => {
   const dir = projectWith({
-    'old.json': { verdict: 'PASS', at: BEFORE, checks: [], unverified: [] },
-    'new.json': { verdict: 'PASS', at: EDIT, checks: [], unverified: [] },
+    'old.json': { ...COMPLETE, at: BEFORE },
+    'new.json': { ...COMPLETE, at: EDIT },
     'fail.json': { verdict: 'FAIL', at: AFTER, checks: [], unverified: [] },
   });
   assert.equal(latestPassAt(dir), EDIT);
@@ -112,4 +116,14 @@ test('CLI: standard profile and empty stdin exit 0', () => {
   assert.equal(run('profile-gate.mjs', JSON.stringify({ session_id: 's', cwd })).status, 0);
   assert.equal(run('profile-gate.mjs', '').status, 0);
   assert.equal(run('track-edit.mjs', '').status, 0);
+});
+
+test('outside git too, only a complete PASS counts (audit 2026-11-18)', () => {
+  const dir = projectWith({
+    'nocriteria.json': { verdict: 'PASS', at: AFTER, checks: COMPLETE.checks, unverified: [] },
+    'unverified.json': { ...COMPLETE, at: AFTER, unverified: ['criterion 2 on Windows'] },
+    'failedcheck.json': { ...COMPLETE, at: AFTER, checks: [{ command: 'x', exitCode: 1, summary: '' }] },
+    'ok.json': { ...COMPLETE, at: EDIT },
+  });
+  assert.equal(latestPassAt(dir), EDIT);
 });

@@ -34,7 +34,7 @@
 - Every delegation states: goal, allowed files/dirs, what to return (format, max length), what it must not do, how to verify.
 - Parallelize only independent tasks; if they touch the same files, give each its own worktree.
 - Before /batch or a dynamic workflow, state the estimated cost and wait for approval.
-- Read line ranges, not whole files. Navigate with LSP (definitions, references) before grep.
+- Read line ranges, not whole files. With an LSP plugin installed, use it (definitions, references) before grep.
 - Use the uc-core agents where the profile calls for them; do not invent ad-hoc agents; agent teams stay off.
 
 ## User

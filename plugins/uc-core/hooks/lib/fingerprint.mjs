@@ -3,7 +3,8 @@
 // verification proofs (.uc/), agent memory notes, design documents (Superpowers specs and plans, ADRs, the glossary)
 // and worktree folders, which the gate checks separately.
 // Content-based: it changes with any edit, however it was made, and stays the same after committing that content.
-// Computed in a temporary index, so the real index is never touched. null outside a git repository.
+// Computed in a temporary index and a temporary object folder (the repository's objects are read through git's
+// alternates), so neither the real index nor .git/objects changes. null outside a git repository.
 import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
@@ -33,7 +34,11 @@ export function treeFingerprint(projectDir) {
   if (!root) return null;
   const gitDir = git(['rev-parse', '--absolute-git-dir'], root);
   if (!gitDir) return null;
-  const index = path.join(os.tmpdir(), `uc-index-${process.pid}-${Date.now()}-${Math.random().toString(16).slice(2)}`);
+  const objects = git(['rev-parse', '--git-path', 'objects'], root);
+  if (!objects) return null;
+  const scratch = fs.mkdtempSync(path.join(os.tmpdir(), 'uc-fingerprint-'));
+  const index = path.join(scratch, 'index');
+  fs.mkdirSync(path.join(scratch, 'objects'));
   try {
     // Starting from a copy of the real index keeps git's stat cache, so unchanged files are not re-read.
     // The copy keeps the original's modification time: git re-reads files changed in the same second as the index
@@ -44,13 +49,15 @@ export function treeFingerprint(projectDir) {
       const st = fs.statSync(real);
       fs.utimesSync(index, st.atime, st.mtime);
     }
-    const env = { ...process.env, GIT_INDEX_FILE: index };
+    const env = {
+      ...process.env, GIT_INDEX_FILE: index, GIT_OBJECT_DIRECTORY: path.join(scratch, 'objects'),
+      GIT_ALTERNATE_OBJECT_DIRECTORIES: path.resolve(root, objects),
+    };
     const excluded = NOT_CODE.map((p) => p.replace(':(glob)', ':(exclude,glob)'));
     if (git(['add', '-A', '--', '.', ...excluded], root, env) === null) return null;
     git(['rm', '--cached', '-r', '-q', '--ignore-unmatch', '--', ...NOT_CODE], root, env);
     return git(['write-tree'], root, env);
   } finally {
-    fs.rmSync(index, { force: true });
-    fs.rmSync(`${index}.lock`, { force: true });
+    fs.rmSync(scratch, { recursive: true, force: true });
   }
 }

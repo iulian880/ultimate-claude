@@ -14,9 +14,9 @@ not turn plugins on or off.
 | | MINIMAL | STANDARD (default) | STRICT |
 |---|---|---|---|
 | When | typo, rename, a bug fix inside one function | everyday development | critical systems, migrations, important VBA, security, data |
-| Process | do it directly, then one check | brainstorm -> plan -> execution chosen per plan -> verify | STANDARD + `architect` agent and an ADR between brainstorming and writing-plans, a persistent plan, `qa-engineer` agent |
+| Process | do it directly, then one check | brainstorm -> plan -> execution chosen per plan -> verify | STANDARD + `architect` agent and an ADR between brainstorming and writing-plans, `qa-engineer` agent |
 | Review | none | Superpowers reviews, then the `code-reviewer` conformance review before finishing the branch | STANDARD + `/security-review` + the domain reviewer + `release-gate` agent |
-| Enforced by hooks | `block-destructive` | `block-destructive` | `block-destructive` + the verification gate |
+| Enforced by hooks | `block-destructive` (+ `workbook-guard` warns) | `block-destructive` (+ `workbook-guard` warns) | `block-destructive` + the verification gate (+ `workbook-guard` blocks) |
 
 The process and review rows are guidance that you follow. Only the last row is enforced by hooks.
 
@@ -26,14 +26,14 @@ The hooks resolve the profile in this order:
 
 1. the session marker `<config dir>/uc/sessions/<session_id>.json`, written when a prompt starts with a
    profile command (see below);
-2. `UC_PROFILE` in the environment, usually set by the project in `.claude/settings.local.json`;
+2. `UC_PROFILE` in the environment, usually set by the project in `.claude/settings.json`;
 3. otherwise STANDARD.
 
 `<config dir>` is `CLAUDE_CONFIG_DIR` when it is set, otherwise `~/.claude`. A value other than `minimal`,
 `standard` or `strict` is ignored.
 
 When the user asks which profile is active: if a line "UC profile for this session is now ..." appeared in
-this session, that is the answer. Otherwise check `UC_PROFILE` and the project's `.claude/settings.local.json`,
+this session, that is the answer. Otherwise check `UC_PROFILE` and the project's `.claude/settings.json`,
 and if neither sets it, the profile is STANDARD.
 
 ## How to switch
@@ -42,7 +42,7 @@ and if neither sets it, the profile is STANDARD.
   and so on). The words must be the first words of the prompt. A hook stores the choice and confirms with
   "UC profile for this session is now STRICT.". You cannot switch the profile yourself: when the user asks
   for a switch in the middle of a sentence, ask them to send `profil <name>` as its own prompt.
-- **For a project:** add this to the project's `.claude/settings.local.json`, then start a new session:
+- **For a project:** add this to the project's `.claude/settings.json`, then start a new session:
 
   ```json
   { "env": { "UC_PROFILE": "strict" } }

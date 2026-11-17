@@ -71,3 +71,14 @@ test('.uc/ in a subfolder and agent memory notes, tracked or not, do not change 
   fs.writeFileSync(path.join(dir, '.claude', 'settings.json'), '{}');
   assert.notEqual(treeFingerprint(dir), before, 'the rest of .claude/ is still code');
 });
+
+test('it leaves no objects in the repository (audit 2026-11-18)', () => {
+  const { dir } = repo();
+  const count = () => fs.readdirSync(path.join(dir, '.git', 'objects'), { recursive: true })
+    .filter((n) => /^[0-9a-f]{2}[\\/][0-9a-f]{38,62}$/.test(n)).length;
+  const before = count();
+  fs.writeFileSync(path.join(dir, 'big.bin'), 'x'.repeat(100000));
+  fs.writeFileSync(path.join(dir, 'a.txt'), 'changed\n');
+  assert.ok(treeFingerprint(dir));
+  assert.equal(count(), before);
+});
