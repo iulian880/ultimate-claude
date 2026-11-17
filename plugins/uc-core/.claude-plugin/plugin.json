@@ -1,0 +1,9 @@
+{
+  "name": "uc-core",
+  "version": "0.1.0",
+  "description": "Engineering-team core: architect, code-reviewer, qa-engineer and release-gate agents, complexity and delivery skills, guard hooks and MINIMAL/STANDARD/STRICT profiles.",
+  "author": {
+    "name": "ultimate-claude"
+  },
+  "license": "UNLICENSED"
+}

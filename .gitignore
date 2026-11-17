@@ -1,0 +1,4 @@
+node_modules/
+.uc/
+*.log
+.DS_Store
