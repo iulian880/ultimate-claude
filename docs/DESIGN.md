@@ -251,7 +251,9 @@ de niciun spike pentru asta.
 
 **Dovada de verificare** (ce verifică `profile-gate` în STRICT; revizuit pe 18.11.2026 după audit): când sesiunea intră în
 STRICT, un hook notează amprenta codului (într-un proiect git: hash-ul arborelui a tot ce ar intra într-un commit, fără
-folderele `.uc/` și fără `.claude/agent-memory/`), deci contează orice editare, inclusiv prin Bash sau scripturi. Dacă
+folderele `.uc/`, fără `.claude/agent-memory/`, fără documentele de design - specificații, planuri, ADR-uri, glosar - și
+fără folderele de worktree), deci contează orice editare, inclusiv prin Bash sau scripturi. Gate-ul verifică folderul
+principal și fiecare worktree în care a lucrat sesiunea. Dacă
 sesiunea editase deja fișiere înainte să treacă în STRICT, punctul de plecare e necunoscut și orice oprire cere un PASS.
 Agentul `release-gate` ia amprenta înainte și după verificări și scrie în rădăcina proiectului
 `.uc/verification/<timestamp>.json` cu comenzile rulate, codurile de ieșire, criteriile, verdictul, `treeBefore` și

@@ -19,8 +19,8 @@ criteria, the verdict is FAIL with the reason "no acceptance criteria found".
 2. Find the project's baseline checks in its package scripts, Makefile or CI configuration: build, type check,
    lint and the full test suite. Run every one the project has, even when no criterion mentions it; they catch
    regressions the criteria never named. Do not invent a check the project does not have.
-3. Before the first check, in the project root, run `node "${CLAUDE_PLUGIN_ROOT}/hooks/fingerprint.mjs"` and keep
-   the line it prints: the fingerprint of the code you are about to verify.
+3. Before the first check, in the project root (inside the worktree, if you work in one), run
+   `node "${CLAUDE_PLUGIN_ROOT}/hooks/fingerprint.mjs"` and keep the line it prints: the code you will verify.
 4. For each criterion, find the command or the inspection that proves it, and run it yourself, now. Output
    pasted by someone else and results from earlier in the session are not evidence. Record every command with
    its exit code and a one-line summary of what the output showed.
