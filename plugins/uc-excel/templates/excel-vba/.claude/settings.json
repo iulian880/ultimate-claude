@@ -1,0 +1,9 @@
+{
+  "enabledPlugins": {
+    "uc-core@ultimate-claude": true,
+    "uc-excel@ultimate-claude": true
+  },
+  "env": {
+    "UC_PROFILE": "standard"
+  }
+}
