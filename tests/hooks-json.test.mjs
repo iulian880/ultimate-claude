@@ -9,9 +9,10 @@ const pluginDir = fileURLToPath(new URL('../plugins/uc-core', import.meta.url));
 const config = () => JSON.parse(fs.readFileSync(path.join(pluginDir, 'hooks', 'hooks.json'), 'utf8'));
 const commands = (groups) => groups.flatMap((g) => g.hooks.map((h) => h.command));
 
-test('the four events are wired to the right scripts', () => {
+test('the five events are wired to the right scripts', () => {
   const { hooks } = config();
-  assert.deepEqual(Object.keys(hooks).sort(), ['PostToolUse', 'PreToolUse', 'Stop', 'UserPromptSubmit']);
+  assert.deepEqual(Object.keys(hooks).sort(), ['PostToolUse', 'PreToolUse', 'SessionStart', 'Stop', 'UserPromptSubmit']);
+  assert.match(commands(hooks.SessionStart)[0], /session-start\.mjs/);
   assert.equal(hooks.PreToolUse[0].matcher, 'Bash|PowerShell');
   assert.match(commands(hooks.PreToolUse)[0], /block-destructive\.mjs/);
   assert.match(commands(hooks.UserPromptSubmit)[0], /set-profile\.mjs/);
@@ -22,7 +23,7 @@ test('the four events are wired to the right scripts', () => {
 
 test('every command references an existing file under plugins/uc-core/hooks', () => {
   const all = Object.values(config().hooks).flatMap(commands);
-  assert.equal(all.length, 4);
+  assert.equal(all.length, 5);
   for (const command of all) {
     const m = /^node "\$\{CLAUDE_PLUGIN_ROOT\}\/(hooks\/[\w-]+\.mjs)"$/.exec(command);
     assert.ok(m, command);

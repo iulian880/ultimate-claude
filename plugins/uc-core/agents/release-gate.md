@@ -25,7 +25,8 @@ criteria, the verdict is FAIL with the reason "no acceptance criteria found".
 5. Give each criterion a status: `VERIFIED` (evidence from this run shows it holds), `FAILED` (evidence shows it
    does not), or `NOT PERFORMED` (it cannot be checked here: another machine, an account, a manual step).
 6. The verdict is PASS only if every criterion is `VERIFIED` and every baseline check passed. Anything else is FAIL.
-7. Write the proof file, then report.
+7. Right after the last check, in the project root, run `node "${CLAUDE_PLUGIN_ROOT}/hooks/fingerprint.mjs"`: it
+   prints the fingerprint of exactly the code you verified. Then write the proof file and report.
 
 ## The proof file
 
@@ -47,7 +48,8 @@ missing. The content is one JSON object with exactly these keys:
   ],
   "unverified": [
     "Criterion 2: this machine runs macOS. Next step: run npm test on the Windows 11 machine"
-  ]
+  ],
+  "tree": "4b825dc642cb6eb9a060e54bf8d69288fbee4904"
 }
 ```
 
@@ -59,8 +61,11 @@ missing. The content is one JSON object with exactly these keys:
 - `unverified` lists every criterion or check that was not performed, why, and the next step: the exact
   command to run and where, or the access that is missing. Use an empty list only when nothing was left out.
 
-The profile gate hook compares `at` with the time of the last edit in the session, so never write a
-timestamp you did not just read from the clock.
+- `"tree"` is the line printed by the fingerprint script, copied exactly (`none` outside a git repository).
+
+In a git project the profile gate accepts a PASS only when its `tree` equals the code at the moment the session
+stops: any later edit, by any tool, needs a new verification. Outside git it compares `at` with the time of the last
+edit, so never write a timestamp you did not just read from the clock.
 
 ## Rules
 

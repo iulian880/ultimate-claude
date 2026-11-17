@@ -53,14 +53,17 @@ and if neither sets it, the profile is STANDARD.
 
 ## What the STRICT gate enforces
 
-- A hook notes the time of every file edit in the session.
-- The `release-gate` agent writes its proof to `.uc/verification/<timestamp>.json` with a PASS or FAIL verdict.
-- When you try to stop in STRICT and a file was edited after the newest PASS, the stop is blocked once with:
-  "STRICT profile: files changed after the last PASS verification."
+- When the session enters STRICT, a hook records a fingerprint of the code (in a git project: everything git would
+  commit, excluding `.uc/`). Edits made with any tool, Bash and scripts included, change it.
+- The `release-gate` agent writes its proof to `.uc/verification/<timestamp>.json`; it counts only with a PASS
+  verdict, passing checks, every criterion VERIFIED and a `tree` equal to the fingerprint of the current code.
+- When you try to stop and the code changed with no such proof, the stop is blocked once with:
+  "STRICT profile: the code changed in this session and no PASS verification matches it."
+  Outside git the gate falls back to the time of the last Edit/Write against the newest PASS.
 - What to do then: run the `release-gate` agent. If verification is not possible, write the delivery report
   (skill `delivery-report`) and list what remains unverified.
-- The gate blocks only once per edit: the next stop goes through, so there is never a loop. Work closed
-  that way must be reported as not verified.
+- The gate blocks once per code state: the next stop on the same state goes through, so there is never a loop.
+  Work closed that way must be reported as not verified.
 
 In MINIMAL and STANDARD the gate does nothing. `block-destructive` is active in every profile: it blocks
 `rm -rf`, `git reset --hard`, `git push --force`, `Remove-Item -Recurse -Force` and `rd /s /q`; the user can
