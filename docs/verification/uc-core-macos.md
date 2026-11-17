@@ -34,15 +34,30 @@ The session marker created by this test was deleted afterwards.
 
 ## Context budget
 
-Not measured. `/context all` is interactive; the baseline for the tokens added by `uc-core` (skill and agent
-descriptions) is still to be recorded from a real session.
+Measured with `/context all` in a new desktop-app session in the `Robot SAP` project (uc-core enabled at project
+scope), 2026-11-17. Total at session start: 58.5k of 1M tokens.
+
+| Item | Tokens |
+|---|---|
+| `uc-core:architect` | 105 |
+| `uc-core:code-reviewer` | 114 |
+| `uc-core:qa-engineer` | 107 |
+| `uc-core:release-gate` | 135 |
+| **Custom agents, total** | **461** |
+| Skills, all sources together | 6.3k |
+
+The agent baseline is 461 tokens. The share of the four `uc-core` skills inside the 6.3k "Skills" line was not
+visible (that section was not expanded), so the skill baseline is still open.
+
+This also shows that the desktop app loads the plugin's agents from a project-scope install.
 
 ## Not verified
 
 - Windows: hooks under Git Bash and PowerShell, the `PowerShell` tool matcher, paths with backslashes at
   runtime (unit tests cover sanitising only), and `bin/uc.ps1` (never executed: no `pwsh` on this machine).
-- The desktop app: only a headless terminal session was tested.
-- Check (e) and the context budget, above.
+- The desktop app: agents load there (see Context budget), but the hooks were only exercised in a headless
+  terminal session.
+- Check (e) and the per-skill part of the context budget, above.
 - `components.lock.json`: the install, uninstall and verify commands were collected from project READMEs by a
   research subagent and were neither run nor re-read; see `components-sources.md`. Three commands are
   `UNVERIFIED` (graphify verify, ccusage uninstall, xlflow uninstall). Marketplace plugins are not pinned to a
