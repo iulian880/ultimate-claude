@@ -66,12 +66,13 @@ test('release-gate runs baseline checks, bans hedging words and gives a next ste
   }
 });
 
-test('code-reviewer filters by confidence, reads project rules and ends with a verdict', () => {
+test('code-reviewer reviews conformance and builds on the Superpowers review', () => {
   const text = read('code-reviewer');
-  for (const word of ['confidence', '80', 'CLAUDE.md', '.claude/rules', 'APPROVE', 'BLOCK', 'Set aside',
-    'Not findings', 'pre-existing']) {
+  for (const word of ['conformance', 'docs/adr/', 'CLAUDE.md', '.claude/rules', 'Superpowers', 'does not repeat',
+    'requesting-code-review', 'APPROVE', 'BLOCK', 'confidence', '80', 'Set aside']) {
     assert.ok(text.includes(word), word);
   }
+  assert.match(parseFrontmatter(text).description, /conformance/);
 });
 
 test('architect uses distinct design constraints, file:line evidence, an ADR test and a blueprint', () => {
