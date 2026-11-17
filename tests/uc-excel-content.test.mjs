@@ -48,3 +48,19 @@ test('vba-workflow: the seven steps in order, commands from CLAUDE.md, Windows i
     assert.ok(text.includes(w), w);
   }
 });
+
+test('excel-vba template: settings enable uc-core and uc-excel with STANDARD', () => {
+  const s = JSON.parse(read('templates', 'excel-vba', '.claude', 'settings.json'));
+  assert.equal(s.enabledPlugins['uc-core@ultimate-claude'], true);
+  assert.equal(s.enabledPlugins['uc-excel@ultimate-claude'], true);
+  assert.equal(s.env.UC_PROFILE, 'standard');
+});
+
+test('excel-vba template: .gitignore and CLAUDE.md sections', () => {
+  assert.match(read('templates', 'excel-vba', '.gitignore'), /^backups\/$/m);
+  const md = read('templates', 'excel-vba', 'CLAUDE.md');
+  for (const h of ['## What this is', '## Commands', '## User documentation', '## Rules']) {
+    assert.ok(md.includes(h), h);
+  }
+  for (const c of ['Lint', 'Build', 'Compile check', 'Tests', 'Full check']) assert.ok(md.includes(c), c);
+});
