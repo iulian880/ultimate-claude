@@ -55,3 +55,19 @@ test('it does not touch the real index', () => {
   treeFingerprint(dir);
   assert.match(git('status', '--porcelain').toString(), /^\?\? new\.txt$/m);
 });
+
+test('.uc/ in a subfolder and agent memory notes, tracked or not, do not change it', () => {
+  const { dir, git } = repo();
+  const mem = path.join(dir, '.claude', 'agent-memory', 'qa-engineer');
+  fs.mkdirSync(mem, { recursive: true });
+  fs.writeFileSync(path.join(mem, 'MEMORY.md'), 'first note\n');
+  git('add', '-A');
+  git('commit', '-q', '-m', 'memory committed');
+  const before = treeFingerprint(dir);
+  fs.writeFileSync(path.join(mem, 'MEMORY.md'), 'first note\nsecond note\n');
+  fs.mkdirSync(path.join(dir, 'packages', 'app', '.uc', 'verification'), { recursive: true });
+  fs.writeFileSync(path.join(dir, 'packages', 'app', '.uc', 'verification', 'p.json'), '{}');
+  assert.equal(treeFingerprint(dir), before);
+  fs.writeFileSync(path.join(dir, '.claude', 'settings.json'), '{}');
+  assert.notEqual(treeFingerprint(dir), before, 'the rest of .claude/ is still code');
+});

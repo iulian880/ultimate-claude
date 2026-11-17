@@ -251,10 +251,12 @@ de niciun spike pentru asta.
 
 **Dovada de verificare** (ce verifică `profile-gate` în STRICT; revizuit pe 18.11.2026 după audit): când sesiunea intră în
 STRICT, un hook notează amprenta codului (într-un proiect git: hash-ul arborelui a tot ce ar intra într-un commit, fără
-`.uc/`), deci contează orice editare, inclusiv prin Bash sau scripturi. Agentul `release-gate` scrie
-`.uc/verification/<timestamp>.json` cu comenzile rulate, codurile de ieșire, criteriile, verdictul și `tree` = amprenta
-codului verificat. La Stop, dacă amprenta s-a schimbat și nicio dovadă PASS validă (verificări trecute, toate criteriile
-VERIFIED) nu are exact amprenta curentă, hook-ul blochează o dată pentru starea respectivă; a doua oprire pe aceeași stare
+folderele `.uc/` și fără `.claude/agent-memory/`), deci contează orice editare, inclusiv prin Bash sau scripturi. Dacă
+sesiunea editase deja fișiere înainte să treacă în STRICT, punctul de plecare e necunoscut și orice oprire cere un PASS.
+Agentul `release-gate` ia amprenta înainte și după verificări și scrie în rădăcina proiectului
+`.uc/verification/<timestamp>.json` cu comenzile rulate, codurile de ieșire, criteriile, verdictul, `treeBefore` și
+`tree`. La Stop, dacă amprenta s-a schimbat și nicio dovadă PASS completă (verificări trecute, cel puțin un criteriu și
+toate VERIFIED, nimic neverificat, aceeași amprentă înainte și după verificări) nu are exact amprenta curentă, hook-ul blochează o dată pentru starea respectivă; a doua oprire pe aceeași stare
 trece (fără bucle) și e consemnată în `delivery-report` ca neverificată. În afara git rămâne regula veche: ora ultimei
 editări Edit/Write față de cel mai nou PASS.
 

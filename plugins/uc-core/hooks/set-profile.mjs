@@ -2,7 +2,7 @@
 // UserPromptSubmit hook: a prompt that starts with "profil strict" / "uc profile minimal" sets the
 // profile for this session. Stdout is added to Claude's context. Never blocks.
 import { isMain, runHook } from './lib/hook-io.mjs';
-import { updateSession } from './lib/state.mjs';
+import { projectDir, updateSession } from './lib/state.mjs';
 import { recordStartTree } from './session-start.mjs';
 
 const PATTERN = /^\s*(?:uc\s+)?profile?\s+(minimal|standard|strict)\b/i;
@@ -18,7 +18,8 @@ export function handle(input) {
   const profile = detectProfile(input?.prompt);
   if (!profile) return { exit: 0 };
   updateSession(input.session_id, { profile });
-  if (profile === 'strict' && typeof input.cwd === 'string') recordStartTree(input.session_id, input.cwd);
+  const dir = projectDir(input);
+  if (profile === 'strict' && dir) recordStartTree(input.session_id, dir);
   return { exit: 0, stdout: `UC profile for this session is now ${profile.toUpperCase()}.` };
 }
 
