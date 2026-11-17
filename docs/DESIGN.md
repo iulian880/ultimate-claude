@@ -187,7 +187,7 @@ recunoaște o comandă de scriere; versiunile exacte fixate pentru LibreOffice �
 | Pluginuri LSP native (TypeScript, Python, C#) | păstrat, prima alegere pentru navigare | global |
 | security-guidance | păstrat; dependență declarată a `uc-core` (decizia utilizatorului, 17.11.2026). Review-urile lui cu Opus sunt oprite global (`ENABLE_CODE_SECURITY_REVIEW=0`), rămân avertismentele automate | doar unde e activ `uc-core` |
 | Frontend Design (Anthropic) | păstrat | proiecte web |
-| UI UX Pro Max v2.15.0 | păstrat, la cerere | skill local în proiectele cu interfață |
+| UI UX Pro Max v2.15.0 | păstrat; instalat global (decizia utilizatorului, 17.11.2026: interfață în aproape toate proiectele). Aduce 7 skill-uri, fără hooks și fără MCP | global |
 | Playwright CLI | **înlocuiește** Playwright MCP | proiecte web |
 | Planning with Files | restrâns | doar STRICT sau lucru pe mai multe sesiuni; `PWF_SKIP_SUBAGENTS=1` |
 | Graphify | restrâns, fără `--strict` | opt-in pe repo-uri mari, după ce LSP-ul nu ajunge |
