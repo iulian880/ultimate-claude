@@ -54,8 +54,10 @@ and if neither sets it, the profile is STANDARD.
 ## What the STRICT gate enforces
 
 - When the session enters STRICT, a hook records a fingerprint of the code (in a git project: everything git would
-  commit, excluding `.uc/` folders and `.claude/agent-memory/`). Edits made with any tool, Bash and scripts included,
-  change it. If the session already edited files before it switched to STRICT, the start is unknown and any stop
+  commit, excluding `.uc/` folders, `.claude/agent-memory/`, design documents - `docs/superpowers/`, `docs/specs/`,
+  `docs/plans/`, `docs/adr/`, `GLOSSARY.md` - and worktree folders). Edits made with any tool, Bash and scripts
+  included, change it. The gate checks the main folder and every worktree the session worked in, so plans executed
+  in a Superpowers worktree are covered; worktrees of other sessions are left alone. If the session already edited files before it switched to STRICT, the start is unknown and any stop
   needs a PASS. Bash-only edits made before the switch are not seen: start the session in STRICT to cover them.
 - The `release-gate` agent writes its proof to `.uc/verification/<timestamp>.json` in the project root. It counts
   only when complete: PASS, every check passed, at least one criterion and all VERIFIED, nothing left unverified,
