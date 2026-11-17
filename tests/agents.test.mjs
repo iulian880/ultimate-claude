@@ -8,8 +8,8 @@ import { lintPlugin, parseFrontmatter } from '../scripts/lint-plugin.mjs';
 const pluginDir = fileURLToPath(new URL('../plugins/uc-core', import.meta.url));
 const read = (name) => fs.readFileSync(path.join(pluginDir, 'agents', `${name}.md`), 'utf8');
 const EXPECTED = {
-  architect: { model: 'opus', effort: 'high' },
-  'code-reviewer': { model: 'opus', effort: 'high' },
+  architect: { model: 'inherit', effort: 'high' },
+  'code-reviewer': { model: 'inherit', effort: 'high' },
   'qa-engineer': { model: 'inherit', effort: 'high' },
   'release-gate': { model: 'inherit', effort: 'medium' },
 };

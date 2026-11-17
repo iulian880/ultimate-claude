@@ -234,3 +234,50 @@ test('CLI: an internal error blocks in STRICT and only warns elsewhere', () => {
   assert.match(strict.stderr, /uc-excel workbook-guard could not check this call/);
   assert.equal(runGuard(input, { profile: undefined, base }).status, 0);
 });
+
+// Audit 2026-11-18.
+const strictRun = (session, proj, command, extraEnv = {}) => {
+  const base = tmp('uc wb cfg ');
+  updateSession(session, { startedAt: new Date(Date.now() - 60_000).toISOString() }, { CLAUDE_CONFIG_DIR: base });
+  const env = { ...process.env, CLAUDE_CONFIG_DIR: base, UC_PROFILE: 'strict', CLAUDE_PROJECT_DIR: proj, ...extraEnv };
+  return spawnSync(process.execPath, [path.join(hooks, 'workbook-guard.mjs')], {
+    input: JSON.stringify({ session_id: session, cwd: proj, tool_name: 'Bash', tool_input: { command } }), encoding: 'utf8', env,
+  }).status;
+};
+function project() {
+  const proj = tmp('uc wb audit ');
+  fs.mkdirSync(path.join(proj, 'livrabile', 'vechi'), { recursive: true });
+  fs.mkdirSync(path.join(proj, 'tools'));
+  fs.writeFileSync(path.join(proj, 'livrabile', 'Robot SAP v3.xlsm'), 'x');
+  fs.writeFileSync(path.join(proj, 'livrabile', 'vechi', 'Robot SAP v3.9.xlsm'), 'x');
+  return proj;
+}
+const COMPILE = 'cd tools && ../.venv/bin/python unocheck.py "../livrabile/Robot SAP v3.xlsm" "Tema.Sym(65)" Flux.InRulare';
+
+test('tools the project lists in UC_EXCEL_READ_ONLY only read the workbooks they name', () => {
+  assert.deepEqual(workbookTargets('Bash', { command: COMPILE }, { readOnly: ['unocheck.py'] }), []);
+  assert.deepEqual(workbookTargets('Bash', { command: 'mytool a.xlsm' }, { readOnly: ['mytool'] }), []);
+  assert.deepEqual(workbookTargets('Bash', { command: COMPILE }, { readOnly: [] }), ['livrabile/Robot SAP v3.xlsm']);
+  const proj = project();
+  assert.equal(strictRun('ro1', proj, COMPILE), 2, 'not listed: treated as a write');
+  assert.equal(strictRun('ro2', proj, COMPILE, { UC_EXCEL_READ_ONLY: 'other.py, unocheck.py' }), 0);
+});
+
+test('a quoted workbook path with spaces inside an inline script is a target', () => {
+  const targets = bash(`python3 -c 'import shutil; shutil.copy("x", "livrabile/Robot SAP v3.xlsm")'`);
+  assert.ok(targets.includes('livrabile/Robot SAP v3.xlsm'), targets.join(' | '));
+  assert.equal(strictRun('sp', project(), `python3 -c 'import shutil; shutil.copy("x", "livrabile/Robot SAP v3.xlsm")'`), 2);
+});
+
+test('find -delete and -exec reach workbooks in subfolders; a plain find only reads', () => {
+  assert.equal(strictRun('f1', project(), 'find livrabile -name "*.xlsm" -delete'), 2);
+  assert.equal(strictRun('f2', project(), 'find . -name "*v3.9*" -exec mv {} /tmp \;'), 2);
+  assert.equal(strictRun('f3', project(), 'find livrabile -name "*.xlsm"'), 0);
+  assert.equal(strictRun('f4', project(), 'find livrabile -name "*.txt" -delete'), 0);
+});
+
+test('git checkout or restore of a folder reaches the workbooks inside it', () => {
+  assert.equal(strictRun('g1', project(), 'git restore livrabile'), 2);
+  assert.equal(strictRun('g2', project(), 'git checkout -- livrabile/vechi'), 2);
+  assert.equal(strictRun('g3', project(), 'git checkout -b feat'), 0);
+});

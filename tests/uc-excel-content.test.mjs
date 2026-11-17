@@ -54,10 +54,13 @@ test('excel-vba template: settings enable uc-core and uc-excel with STANDARD', (
   assert.equal(s.enabledPlugins['uc-core@ultimate-claude'], true);
   assert.equal(s.enabledPlugins['uc-excel@ultimate-claude'], true);
   assert.equal(s.env.UC_PROFILE, 'standard');
+  assert.equal(s.env.ENABLE_CODE_SECURITY_REVIEW, '0', 'security-guidance reviews off on every machine, not only here');
+  assert.equal(typeof s.env.UC_EXCEL_READ_ONLY, 'string');
 });
 
 test('excel-vba template: .gitignore and CLAUDE.md sections', () => {
   assert.match(read('templates', 'excel-vba', '.gitignore'), /^backups\/$/m);
+  assert.match(read('templates', 'excel-vba', '.gitignore'), /^\.uc\/$/m, 'verification proofs are never committed');
   const md = read('templates', 'excel-vba', 'CLAUDE.md');
   for (const h of ['## What this is', '## Commands', '## User documentation', '## Rules']) {
     assert.ok(md.includes(h), h);

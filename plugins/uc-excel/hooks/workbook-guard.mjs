@@ -9,6 +9,9 @@ import { readSession, resolveProfile } from './lib/state.mjs';
 
 const WORKBOOK = /\.(xlsm|xlsb|xlam)$/i;
 const EMBEDDED = /[^\s'"(),=;]+\.(?:xlsm|xlsb|xlam)\b/gi;
+// A quoted path inside an inline script can contain spaces: "livrabile/Robot SAP v3.xlsm".
+const QUOTED = /["']([^"'\n]*\.(?:xlsm|xlsb|xlam))["']/gi;
+const INTERPRETER = /^(?:python[\d.]*|node|bash|sh|zsh|pwsh|powershell|ruby|perl)(?:\.exe)?$/i;
 const SEPARATORS = new Set([';', '&&', '||', '|', '&', '\n']);
 const REDIRECTS = new Set(['>', '>>', '>|', '&>']);
 // Commands that only read the workbooks they name (unzip extracts elsewhere and never changes the archive).
@@ -18,6 +21,11 @@ const READ_ONLY = new Set(['ls', 'zipinfo', 'unzip', 'shasum', 'md5', 'md5sum', 
 const GIT_READ_ONLY = new Set(['add', 'diff', 'log', 'show', 'status', 'ls-files', 'blame', 'commit']);
 const BASH_DQ_ESCAPES = new Set(['"', '\\', '$', '`', '\n']);
 const NO_SESSION_START_MS = 12 * 60 * 60 * 1000;
+
+/** Project tools that only read the workbooks they name, from env UC_EXCEL_READ_ONLY ("unocheck.py, mytool"). */
+export function readOnlyTools(env = process.env) {
+  return (env.UC_EXCEL_READ_ONLY ?? '').split(/[,;]/).map((t) => t.trim()).filter(Boolean);
+}
 
 /**
  * Splits a shell command into words and operators, keeping quoted text (spaces included) inside one word.
@@ -77,8 +85,20 @@ function copyTargets(sources, dest) {
 const isAbsolutePath = (p) => path.isAbsolute(p) || /^[A-Za-z]:[\\/]|^\\\\/.test(p);
 const workbooks = (list) => list.filter((w) => WORKBOOK.test(w));
 
+// under(dir, pattern) builds a recursive target: every file below dir whose name matches (see expand).
+const under = (dir, pattern = '*') => `${dir.replace(/[\\/]+$/, '') || '.'}/**/${pattern}`;
+
+/** find writes only with -delete or -exec/-execdir: then every match under its start folders is a target. */
+function findTargets(args) {
+  if (!args.some((a) => ['-delete', '-exec', '-execdir', '-ok', '-okdir'].includes(a))) return [];
+  const first = args.findIndex((a) => a.startsWith('-') || a === '(' || a === '!');
+  const roots = (first === -1 ? args : args.slice(0, first));
+  const patterns = args.flatMap((a, i) => (['-name', '-iname'].includes(a) && args[i + 1] ? [args[i + 1]] : []));
+  return (roots.length ? roots : ['.']).flatMap((r) => (patterns.length ? patterns : ['*']).map((p) => under(r, p)));
+}
+
 /** Returns {cd} for a `cd` segment, otherwise {targets} written by the segment (paths as written). */
-function segmentTargets(seg) {
+function segmentTargets(seg, readOnly = []) {
   const redirects = [];
   const words = [];
   for (let i = 0; i < seg.length; i++) {
@@ -93,8 +113,19 @@ function segmentTargets(seg) {
   const args = words.slice(start + 1);
   if (cmd === 'cd') return { cd: args.find((a) => !a.startsWith('-')) ?? '' };
   const redirected = workbooks(redirects);
-  if (READ_ONLY.has(cmd)) return { targets: redirected };
-  if (cmd === 'git' && GIT_READ_ONLY.has(args.find((a) => !a.startsWith('-')))) return { targets: redirected };
+  if (READ_ONLY.has(cmd) || readOnly.includes(cmd)) return { targets: redirected };
+  if (INTERPRETER.test(cmd) && !args.some((a) => /^-(c|e|command)$/i.test(a))) {
+    const script = args.find((a) => !a.startsWith('-'));
+    if (script && readOnly.includes(path.basename(script.replace(/\\/g, '/')))) return { targets: redirected };
+  }
+  if (cmd === 'find') return { targets: [...findTargets(args), ...redirected] };
+  const gitSub = cmd === 'git' ? args.find((a) => !a.startsWith('-')) : null;
+  if (cmd === 'git' && GIT_READ_ONLY.has(gitSub)) return { targets: redirected };
+  if (gitSub === 'checkout' || gitSub === 'restore') {
+    // A path that is not a workbook may be a folder: the workbooks inside it are restored too.
+    const paths = args.slice(args.indexOf(gitSub) + 1).filter((a) => !a.startsWith('-'));
+    return { targets: [...workbooks(paths), ...paths.filter((a) => !WORKBOOK.test(a)).map((a) => under(a)), ...redirected] };
+  }
   if (cmd === 'cp' || cmd === 'rsync') {
     const operands = args.filter((a) => !a.startsWith('-'));
     return { targets: [...copyTargets(operands.slice(0, -1), operands.at(-1) ?? ''), ...redirected] };
@@ -113,12 +144,13 @@ function segmentTargets(seg) {
     if (dest === null) dest = positional.shift() ?? '';
     return { targets: [...copyTargets(sources, dest), ...redirected] };
   }
-  const embedded = args.filter((a) => !WORKBOOK.test(a)).flatMap((a) => a.match(EMBEDDED) ?? []);
+  const embedded = args.filter((a) => !WORKBOOK.test(a))
+    .flatMap((a) => [...(a.match(EMBEDDED) ?? []), ...[...a.matchAll(QUOTED)].map((m) => m[1])]);
   return { targets: [...workbooks(args), ...embedded, ...redirected] };
 }
 
 /** Workbook paths that this tool call may write, relative to the call's cwd (after any `cd`). */
-export function workbookTargets(toolName, toolInput = {}) {
+export function workbookTargets(toolName, toolInput = {}, { readOnly = readOnlyTools() } = {}) {
   if (['Write', 'Edit', 'NotebookEdit', 'MultiEdit'].includes(toolName)) {
     const p = toolInput.file_path ?? toolInput.notebook_path;
     return typeof p === 'string' && WORKBOOK.test(p) ? [p] : [];
@@ -128,7 +160,7 @@ export function workbookTargets(toolName, toolInput = {}) {
   let dir = '';
   const out = [];
   for (const seg of segments(tokenize(command, { powershell: toolName === 'PowerShell' }))) {
-    const r = segmentTargets(seg);
+    const r = segmentTargets(seg, readOnly);
     if ('cd' in r) {
       dir = isAbsolutePath(r.cd) ? r.cd : path.join(dir, r.cd);
       continue;
@@ -138,11 +170,37 @@ export function workbookTargets(toolName, toolInput = {}) {
   return [...new Set(out)];
 }
 
-/** Expands a `*` or `?` pattern in the file name part against the disk; other paths are returned as they are. */
+const globRe = (pattern) =>
+  new RegExp(`^${pattern.replace(/[.+^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*').replace(/\?/g, '.')}$`, 'i');
+
+/** Every file under dir, skipping git and dependency folders. */
+function walk(dir, depth = 0) {
+  let entries;
+  try {
+    entries = fs.readdirSync(dir, { withFileTypes: true });
+  } catch {
+    return [];
+  }
+  return entries.flatMap((e) => {
+    const full = path.join(dir, e.name);
+    if (e.isDirectory()) return depth < 20 && !['.git', 'node_modules', '.venv'].includes(e.name) ? walk(full, depth + 1) : [];
+    return [full];
+  });
+}
+
+/**
+ * Expands a target against the disk: `<dir>/**\/<pattern>` to every matching file under dir, a `*` or `?` in the
+ * file name to the matching files in that folder; other paths are returned as they are.
+ */
 function expand(target, cwd) {
+  const recursive = target.split(/[\\/]\*\*[\\/]/);
+  if (recursive.length === 2) {
+    const re = globRe(recursive[1]);
+    return walk(path.resolve(cwd, recursive[0])).filter((f) => re.test(path.basename(f)));
+  }
   if (!/[*?]/.test(path.basename(target))) return [path.resolve(cwd, target)];
   const dir = path.resolve(cwd, path.dirname(target));
-  const re = new RegExp(`^${path.basename(target).replace(/[.+^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*').replace(/\?/g, '.')}$`);
+  const re = globRe(path.basename(target));
   try {
     return fs.readdirSync(dir).filter((n) => re.test(n)).map((n) => path.join(dir, n));
   } catch {
@@ -203,7 +261,7 @@ function evaluate(input) {
   const backupDirs = [path.join(projectDir, 'backups') + path.sep, path.join(cwd, 'backups') + path.sep];
   // Nothing to lose: the backup copy itself, and a workbook that does not exist yet.
   const atRisk = targets.flatMap((t) => expand(t, cwd))
-    .filter((full) => !backupDirs.some((b) => full.startsWith(b)) && fs.existsSync(full));
+    .filter((full) => WORKBOOK.test(full) && !backupDirs.some((b) => full.startsWith(b)) && fs.existsSync(full));
   const missing = [...new Set(atRisk.filter((t) => !hasFreshBackup(t, projectDir, startedAt)).map((t) => path.basename(t)))];
   if (missing.length === 0) return { exit: 0 };
   const files = missing.join(', ');

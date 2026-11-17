@@ -12,6 +12,8 @@ VBA code lives as text in `<sources dir>/` (`.bas`, `.cls`); the workbook is bui
 - Tests: `<command>`
 - Full check (lint, build, compile check, tests): `<command>`
 - Backups go to `backups/<base name>.<YYYYMMDD-HHMMSS><ext>` before any workbook write.
+- Tools that only read the workbook (for example the compile check script) are listed, comma-separated, in
+  `env.UC_EXCEL_READ_ONLY` in `.claude/settings.json`, so the backup guard does not treat them as writes.
 
 ## User documentation
 `<file>` is the single user guide. Update it with every change users can notice; do not keep a second copy.
