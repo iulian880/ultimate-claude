@@ -83,12 +83,20 @@ test('architect uses distinct design constraints, file:line evidence, an ADR tes
   }
 });
 
-test('qa-engineer names the break, checks mutations, reruns new tests and scores criticality', () => {
+test('qa-engineer owns test strategy and leaves test-writing technique to Superpowers TDD', () => {
   const text = read('qa-engineer').toLowerCase();
-  for (const word of ['name the production change', 'by hand', 'mutation check', 'three times', 'criticality',
-    'never assert on the mock', 'baseline', 'end-to-end']) {
+  for (const word of ['superpowers:test-driven-development', 'three times', 'criticality', 'baseline', 'end-to-end']) {
     assert.ok(text.includes(word), word);
   }
+  for (const copied of ['mutation check', 'expected values by hand', 'never assert on the mock']) {
+    assert.ok(!text.includes(copied), `restates Superpowers TDD: ${copied}`);
+  }
+});
+
+test('architect runs after brainstorming and does not redo the user-facing choice', () => {
+  const text = read('architect');
+  assert.ok(text.includes('after brainstorming'));
+  assert.ok(text.includes('does not redo'));
 });
 
 test('agents that read diffs or test output bypass RTK filtering', () => {

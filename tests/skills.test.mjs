@@ -45,6 +45,12 @@ test('delivery-report has the five sections and cites the verification proof', (
   }
 });
 
+test('delivery-report carries the Superpowers rulings and deferred minors', () => {
+  const text = read('delivery-report');
+  assert.ok(text.includes('Rulings I made'));
+  assert.ok(text.includes('Deferred minors'));
+});
+
 test('uc-profile explains the three profiles and how to switch', () => {
   const text = read('uc-profile');
   for (const word of ['MINIMAL', 'STANDARD', 'STRICT', 'profil strict', 'UC_PROFILE', 'release-gate']) {
