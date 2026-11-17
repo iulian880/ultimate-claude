@@ -46,18 +46,26 @@ Node v26.13.1, Homebrew Python 3.15.2. Executed inline on `main` in both repos.
 - `cp x.xlsm dir/`, workbook paths inside `python -c` scripts and `>|` were not caught;
 - on Linux a test timeout left `soffice.bin` running in the test profile (now the whole process group is stopped).
 
-Deferred minors: some read-only commands (`unzip -o`, `olevba`, `cat`, `git add`) still count as writes; ctime can
-also change on rename or chmod; the profile URL encodes only spaces; a profile-creation timeout prints a traceback;
-`unocheck.py` classifies by English messages (a localized LibreOffice would turn compile errors into "runtime");
-its temp folder is not deleted; `verifica.sh` adds about 430 KB to `backups/` per run and ignores `SOFFICE` in its
-own check; a shim declaring the three missing constants would let `Tema` compile fully in LibreOffice.
+Deferred minors, later the same day: three fixed at the user's request.
+- Fixed: read-only commands (`unzip` in any mode, `cat`, `head`, `tail`, `xxd`, `strings`, `wc`, `olevba`, and `git add`,
+  `diff`, `log`, `show`, `status`, `ls-files`, `blame`, `commit`) no longer count as workbook writes; `git checkout` and
+  `git restore` still do. 122 tests pass.
+- Fixed: `tools/backup_build.sh` keeps only the last 10 build-output backups (`test_backup_build.py`); `verifica.sh`
+  honours `SOFFICE`.
+- Partly fixed: `unocheck.py` declares the three Excel constants LibreOffice lacks, so `Tema` and `Flux` get past
+  their module-level constants. Checking with deliberately broken copies showed a limit of LibreOffice itself:
+  an undefined variable in a procedure that does not run is not flagged, and a syntax error was reported once as
+  "Internal error" (now a failure) and once as "Index out of defined range" (indistinguishable from a runtime error).
+  The compile check is a basic check, not a guarantee; this is written in Robot SAP's `tools/README.md` and `CLAUDE.md`.
+  A target called without its arguments is never compiled by LibreOffice and now fails as `ARGUMENTE`.
+- Still deferred: ctime can change on rename or chmod; the profile URL encodes only spaces; a profile-creation
+  timeout prints a traceback; `unocheck.py` matches English messages; its temp folder is not deleted.
 
 ## Not verified
 
 - Windows, Excel and SAP: running the built workbook is the user's check (DESIGN §5.4), not an acceptance criterion.
-- Compile coverage: LibreOffice compiles a module only when one of its procedures is called. The check calls
-  `Tema.Sym` and `Flux.InRulare`; other modules are compiled only as far as the tests load them. `Tema` stops at the
-  first LibreOffice-missing constant, so the rest of `Tema` is not compile-checked here.
+- Compile check reliability: see above. Modules other than `Tema` and `Flux` are loaded only as far as the tests use
+  them; errors in code that never runs under LibreOffice are found only by the Excel run on Windows.
 - `workbook-guard` on Windows (PowerShell commands): unit tests cover Bash-style commands; PowerShell `Copy-Item`
   calls are treated as "every workbook path is a target" and were not run live.
 - The guard cannot see workbooks written by scripts that do not name them (`build_all.sh`); `tools/verifica.sh` and the
