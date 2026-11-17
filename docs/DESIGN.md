@@ -313,6 +313,10 @@ Detalii și comenzi de restaurare: `docs/verification/mac-migration.md`.
 - Playwright CLI în loc de MCP. Impeccable amânat.
 - Skills-urile mattpocock rămân proprietarul vocabularului de arhitectură.
 - `headroom` și `code-graph` propuse spre scoatere de pe Mac.
+- Rolurile față de Superpowers (aprobat de utilizator pe 17.11.2026, după audit; Planul 1b): `uc-core` alege executorul
+  (inline sau SDD) după criteriile Superpowers, scrise ca regulă în `CLAUDE.md` global, și îl arată la review-ul
+  planului; Superpowers face metodologia și propriile review-uri de cod; `code-reviewer` face review-ul de conformitate
+  înainte de finalizarea branch-ului; `qa-engineer` nu repetă TDD-ul Superpowers.
 
 ## 13. Rămas neverificat
 
