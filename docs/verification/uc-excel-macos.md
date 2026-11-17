@@ -14,10 +14,10 @@ Node v26.13.1, Homebrew Python 3.15.2. Executed inline on `main` in both repos.
 
 | Check | Result |
 |---|---|
-| `npm test` (ultimate-claude) | 117 passed, 0 failed |
+| `npm test` (ultimate-claude) | 121 passed, 0 failed (after the final-review fixes) |
 | `node scripts/lint-plugin.mjs plugins/uc-excel` | `OK: plugins/uc-excel` |
 | `claude plugin validate .` and `plugins/uc-excel` | `Validation passed` |
-| `tools/verifica.sh` (Robot SAP) | lint "nicio problema gasita"; build OK; compile check: `Flux.InRulare` OK, `Tema.Sym` LO-LIPSA; 7/7 tests "TOATE TESTELE AU TRECUT" (160 checks); exit 0 in 1 min 34 s |
+| `tools/verifica.sh` (Robot SAP) | lint "nicio problema gasita"; build OK; compile check: `Flux.InRulare` OK, `Tema.Sym` LO-LIPSA; 7/7 tests "TOATE TESTELE AU TRECUT" (160 checks); exit 0 in 1 min 34 s. After the final-review fixes: 8/8 tests (with `test_ruleaza.py`), exit 0 in 1 min 32 s |
 | Mac build reproduces the archived build | `tools/vbaProject_v3.bin` and `vba/EditorPasi.bas` byte-identical to `Robot_SAP_proiect_v3.10.zip` |
 | Tests leave the user's LibreOffice alone | LibreOffice opened first (pid 37313); `test_pasi_livrati.py` passed; the app was still running afterwards |
 | Live: Robot SAP session (`claude -p`, project-scope plugins) | lists `uc-excel:excel-vba-reviewer`, `uc-excel:vba-workflow` and the uc-core agents and skills |
@@ -36,6 +36,21 @@ Node v26.13.1, Homebrew Python 3.15.2. Executed inline on `main` in both repos.
   workbooks that did not exist yet. Now only existing workbooks outside `backups/` need a backup.
 - **A `cp -p` backup looked old** (it keeps the source's modification time), so STRICT kept blocking after a backup.
   Freshness now uses the later of mtime and ctime.
+
+## Final review (fresh reviewer, session model)
+
+"With fixes". Five important findings, each fixed test-first:
+- the guard mangled Windows paths (backslashes) in PowerShell and in bash double quotes;
+- `rm livrabile/*.xlsm` and `cd livrabile && rm a.xlsm` were not caught;
+- `backups/` was looked up under the current folder instead of the project root (`CLAUDE_PROJECT_DIR`);
+- `cp x.xlsm dir/`, workbook paths inside `python -c` scripts and `>|` were not caught;
+- on Linux a test timeout left `soffice.bin` running in the test profile (now the whole process group is stopped).
+
+Deferred minors: some read-only commands (`unzip -o`, `olevba`, `cat`, `git add`) still count as writes; ctime can
+also change on rename or chmod; the profile URL encodes only spaces; a profile-creation timeout prints a traceback;
+`unocheck.py` classifies by English messages (a localized LibreOffice would turn compile errors into "runtime");
+its temp folder is not deleted; `verifica.sh` adds about 430 KB to `backups/` per run and ignores `SOFFICE` in its
+own check; a shim declaring the three missing constants would let `Tema` compile fully in LibreOffice.
 
 ## Not verified
 
