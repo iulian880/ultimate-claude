@@ -13,8 +13,11 @@
 | MINIMAL | typo, rename, a fix inside one function | do it directly, then one check | none |
 | STANDARD | everyday development | Superpowers: brainstorming, writing-plans, executing-plans (inline), verification | `code-reviewer` |
 | STRICT | critical systems, migrations, important VBA, security, data | STANDARD + `architect` (ADR) + `qa-engineer` | `code-reviewer`, `/security-review`, domain reviewer, `release-gate` |
-- MINIMAL work skips brainstorming and plans; this overrides the Superpowers "skill first" rule.
-- Switch for one session by starting a prompt with `profil <name>`. Hooks enforce profiles only where uc-core is enabled.
+- Work that fits the MINIMAL row is done directly whatever the session profile: no brainstorming or plan, then one
+  check. This overrides the Superpowers "skill first" rule.
+- Switch for one session by starting a prompt with `profil <name>`.
+- Where uc-core is not enabled: no profile hooks; review with Superpowers requesting-code-review; skip uc-core agents
+  and skills that are missing, and say so.
 
 ## Verification
 - Never claim done without running a check (tests, build, typecheck or screenshot) and showing its output.
