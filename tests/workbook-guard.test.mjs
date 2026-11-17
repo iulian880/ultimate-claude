@@ -281,3 +281,10 @@ test('git checkout or restore of a folder reaches the workbooks inside it', () =
   assert.equal(strictRun('g2', project(), 'git checkout -- livrabile/vechi'), 2);
   assert.equal(strictRun('g3', project(), 'git checkout -b feat'), 0);
 });
+
+test('find from / keeps / as its root; a -name that cannot be a workbook is not searched', () => {
+  const t = workbookTargets('Bash', { command: 'find / -name "*.xlsm" -delete' }, { readOnly: [] });
+  assert.ok(t.length === 1 && t[0].startsWith('/') && !t[0].startsWith('./'), t.join(' | '));
+  assert.deepEqual(workbookTargets('Bash', { command: 'find ~ -name x -exec ls {} +' }, { readOnly: [] }), []);
+  assert.deepEqual(workbookTargets('Bash', { command: 'find . -name "*.txt" -delete' }, { readOnly: [] }), []);
+});

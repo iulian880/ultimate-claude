@@ -3,8 +3,9 @@
 // verification proofs (.uc/), agent memory notes, design documents (Superpowers specs and plans, ADRs, the glossary)
 // and worktree folders, which the gate checks separately.
 // Content-based: it changes with any edit, however it was made, and stays the same after committing that content.
-// Computed in a temporary index and a temporary object folder (the repository's objects are read through git's
-// alternates), so neither the real index nor .git/objects changes. null outside a git repository.
+// Computed in a temporary index and a temporary object folder that lists the repository's objects in
+// info/alternates (a file, so a ':' or ';' in the path is harmless), so neither the real index nor .git/objects
+// changes. null outside a git repository.
 import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
@@ -22,9 +23,36 @@ function git(args, cwd, env = process.env) {
   return r.status === 0 ? r.stdout.trim() : null;
 }
 
+const real = (p) => {
+  try {
+    return fs.realpathSync(p);
+  } catch {
+    return p;
+  }
+};
+
 /** The root folder of the git working tree (main checkout or linked worktree) that contains `dir`, or null. */
 export function repoRoot(dir) {
-  return typeof dir === 'string' && fs.existsSync(dir) ? git(['rev-parse', '--show-toplevel'], dir) : null;
+  if (typeof dir !== 'string' || !fs.existsSync(dir)) return null;
+  const root = git(['rev-parse', '--show-toplevel'], dir);
+  return root ? real(root) : null;
+}
+
+/** The repository's shared .git folder: the same for the main checkout and all its linked worktrees. */
+export function commonDir(dir) {
+  const out = typeof dir === 'string' && fs.existsSync(dir) ? git(['rev-parse', '--git-common-dir'], dir) : null;
+  return out ? real(path.resolve(dir, out)) : null;
+}
+
+/** Every working tree of the repository that contains `dir` (main checkout first), or []. */
+export function worktreeRoots(dir) {
+  const out = git(['worktree', 'list', '--porcelain'], dir);
+  return out ? out.split('\n').filter((l) => l.startsWith('worktree ')).map((l) => real(l.slice(9))) : [];
+}
+
+/** The tree of the commit checked out in `dir`, or null. */
+export function headTree(dir) {
+  return git(['rev-parse', 'HEAD^{tree}'], dir);
 }
 
 /** Returns the tree hash of the current working directory content, or null outside a git repository. */
@@ -38,7 +66,8 @@ export function treeFingerprint(projectDir) {
   if (!objects) return null;
   const scratch = fs.mkdtempSync(path.join(os.tmpdir(), 'uc-fingerprint-'));
   const index = path.join(scratch, 'index');
-  fs.mkdirSync(path.join(scratch, 'objects'));
+  fs.mkdirSync(path.join(scratch, 'objects', 'info'), { recursive: true });
+  fs.writeFileSync(path.join(scratch, 'objects', 'info', 'alternates'), `${path.resolve(root, objects)}\n`);
   try {
     // Starting from a copy of the real index keeps git's stat cache, so unchanged files are not re-read.
     // The copy keeps the original's modification time: git re-reads files changed in the same second as the index
@@ -49,10 +78,7 @@ export function treeFingerprint(projectDir) {
       const st = fs.statSync(real);
       fs.utimesSync(index, st.atime, st.mtime);
     }
-    const env = {
-      ...process.env, GIT_INDEX_FILE: index, GIT_OBJECT_DIRECTORY: path.join(scratch, 'objects'),
-      GIT_ALTERNATE_OBJECT_DIRECTORIES: path.resolve(root, objects),
-    };
+    const env = { ...process.env, GIT_INDEX_FILE: index, GIT_OBJECT_DIRECTORY: path.join(scratch, 'objects') };
     const excluded = NOT_CODE.map((p) => p.replace(':(glob)', ':(exclude,glob)'));
     if (git(['add', '-A', '--', '.', ...excluded], root, env) === null) return null;
     git(['rm', '--cached', '-r', '-q', '--ignore-unmatch', '--', ...NOT_CODE], root, env);

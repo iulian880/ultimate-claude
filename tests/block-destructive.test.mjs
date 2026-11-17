@@ -117,3 +117,23 @@ test('the PowerShell tool turns on PowerShell aliases', () => {
   });
   assert.equal(r.status, 2);
 });
+
+// Final review 2026-11-18: quoting must follow bash (escapes, pipes into a shell), every git call counts.
+test('text piped into a shell, or escaped quotes, do not hide a command that runs', () => {
+  for (const c of [`echo "${RF} ~/proj" | sh`, `echo '${HARD}' | bash`, `echo it\\'s; ${RF} build; echo \\'ok`,
+    `echo \\"; ${RF} build; echo \\"`, `echo don\\'t; git clean -fdx; echo \\'done`, `printf '%s' "git clean -fdx" | sudo bash`]) {
+    assert.equal(typeof findDestructive(c), 'string', c);
+  }
+});
+
+test('git commands inside a quoted script and the other forms that discard work are blocked', () => {
+  for (const c of ['bash -c "git status; git clean -fdx"', "sh -c 'git fetch && git checkout -- .'", 'eval "git clean -fdx"',
+    'git switch -f main', 'git switch --discard-changes main', 'git worktree remove --force .worktrees/x',
+    'git --work-tree x clean -fdx']) {
+    assert.equal(typeof findDestructive(c), 'string', c);
+  }
+  for (const c of ['git switch main', 'git switch -c feat', 'git worktree remove .worktrees/x', `git log --grep="${RF}" | head`,
+    'Remove-Item -Recurse -Force C:\\x -WhatIf']) {
+    assert.equal(findDestructive(c), null, c);
+  }
+});

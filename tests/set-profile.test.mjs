@@ -57,3 +57,17 @@ test('a question that starts with a profile name does not switch the profile (au
   assert.equal(detectProfile('profil strict e mai lent?'), null);
   assert.equal(detectProfile('profil strict\nDe ce e lent testul?'), 'strict');
 });
+
+test('a period or colon after the profile name switches even when a question follows', () => {
+  assert.equal(detectProfile('profil strict. Ce face gate-ul?'), 'strict');
+  assert.equal(detectProfile('profil minimal: de ce?'), 'minimal');
+  assert.equal(detectProfile('Profile standard is slow, why?'), null);
+});
+
+test('a question that names a profile gets a note that nothing was switched', () => {
+  const base = tempBase();
+  const r = run(JSON.stringify({ session_id: 'q', prompt: 'Profile standard is slow, why?' }), base);
+  assert.equal(r.status, 0);
+  assert.match(r.stdout, /not switched/);
+  assert.deepEqual(readSession('q', { CLAUDE_CONFIG_DIR: base }), {});
+});

@@ -10,7 +10,7 @@ import path from 'node:path';
 import { isMain, runHook } from './lib/hook-io.mjs';
 import { projectDir, readSession, resolveProfile, updateSession } from './lib/state.mjs';
 import { latestPassAt as findLatestPassAt, passingTrees } from './lib/verification.mjs';
-import { repoRoot, treeFingerprint } from './lib/fingerprint.mjs';
+import { commonDir, repoRoot, treeFingerprint } from './lib/fingerprint.mjs';
 
 const time = (iso) => (typeof iso === 'string' ? Date.parse(iso) : NaN);
 
@@ -33,10 +33,14 @@ export function shouldBlockTree({ profile, stopHookActive, startTree, currentTre
 const TREE_MESSAGE = 'STRICT profile: the code changed in this session and no PASS verification matches it. '
   + 'Run the release-gate agent, or state in the delivery report what remains unverified.';
 
-/** Working trees to check: the main checkout, the one Claude is in now, and those the session worked in before. */
+/**
+ * Working trees to check: the main checkout, the one Claude is in now, and those the session worked in before -
+ * only worktrees of this repository, never another repository Claude happened to visit.
+ */
 function treesToCheck(mainRoot, cwd, seen) {
-  const roots = [mainRoot, repoRoot(cwd), ...(Array.isArray(seen) ? seen : [])];
-  return [...new Set(roots.filter((r) => typeof r === 'string' && fs.existsSync(r)))];
+  const repo = commonDir(mainRoot);
+  const roots = [...new Set([mainRoot, repoRoot(cwd), ...(Array.isArray(seen) ? seen : [])])];
+  return roots.filter((r) => typeof r === 'string' && fs.existsSync(r) && (r === mainRoot || commonDir(r) === repo));
 }
 
 /** Proofs may sit in the project folder of any checked tree (monorepo package) or at its root. */
@@ -53,17 +57,27 @@ function handleTree(input, session, profile, dir, mainRoot, mainTree) {
   const roots = treesToCheck(mainRoot, input.cwd, session.worktrees);
   const passTrees = passTreesFor(roots, mainRoot, dir);
   const blocked = session.gateBlocked && typeof session.gateBlocked === 'object' ? session.gateBlocked : {};
+  const starts = { ...(session.starts && typeof session.starts === 'object' ? session.starts : {}) };
+  // A worktree created during the session starts from the main checkout's state; one that already existed starts
+  // from the state the session first found it in.
+  const existed = (root) => !Array.isArray(session.startWorktrees) || session.startWorktrees.includes(root);
   const blocking = {};
   for (const root of roots) {
     const currentTree = root === mainRoot ? mainTree : treeFingerprint(root);
+    let startTree = root === mainRoot ? session.startTree : starts[root];
+    if (!startTree && existed(root)) {
+      starts[root] = currentTree;
+      continue;
+    }
+    startTree ??= session.startTree;
     const block = shouldBlockTree({
-      profile, stopHookActive: input.stop_hook_active === true, startTree: session.startTree, currentTree, passTrees,
+      profile, stopHookActive: input.stop_hook_active === true, startTree, currentTree, passTrees,
       blockedTree: blocked[root],
     });
     if (block) blocking[root] = currentTree;
   }
   const worktrees = roots.filter((r) => r !== mainRoot);
-  const patch = { worktrees };
+  const patch = { worktrees, starts };
   const names = Object.keys(blocking);
   if (names.length > 0) Object.assign(patch, { gateBlocked: { ...blocked, ...blocking }, gateBlockedAt: new Date().toISOString() });
   updateSession(input.session_id, patch);

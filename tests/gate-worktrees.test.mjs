@@ -91,3 +91,38 @@ test('specs, plans, ADRs and the glossary are not code: changing only them does 
   fs.writeFileSync(path.join(dir, 'code.js'), 'now code\n');
   assert.equal(stop(dir, env), 2);
 });
+
+// Final review 2026-11-18: only this repository's worktrees, and only what this session changed in them.
+test('a stop in, or an edit to, an unrelated repository does not involve the gate', () => {
+  const { dir, env } = setup();
+  const other = repo().dir;
+  assert.equal(stop(other, env), 0, 'stop with cwd in another repository');
+  fs.writeFileSync(path.join(other, 'code.js'), 'edited elsewhere\n');
+  run('track-edit.mjs', { session_id: 's', cwd: dir, tool_name: 'Edit', tool_input: { file_path: path.join(other, 'code.js') } }, env);
+  fs.writeFileSync(path.join(other, 'code.js'), 'changed again\n');
+  assert.equal(stop(dir, env), 0);
+});
+
+test('a worktree that existed before the session is judged from the state the session found it in', () => {
+  const { dir, git } = repo();
+  const old = path.join(dir, '.worktrees', 'old');
+  git('worktree', 'add', '-q', '.worktrees/old', '-b', 'old');
+  fs.writeFileSync(path.join(old, 'code.js'), 'other work, committed on its branch\n');
+  git('-C', old, 'commit', '-q', '-am', 'other branch');
+  const env = { ...process.env, CLAUDE_CONFIG_DIR: tmp('uc wt cfg '), CLAUDE_PROJECT_DIR: dir, UC_PROFILE: 'strict' };
+  run('session-start.mjs', { session_id: 's', cwd: dir }, env);
+  assert.equal(stop(old, env), 0, 'only stopping there');
+  fs.writeFileSync(path.join(old, 'code.js'), 'now this session edits it\n');
+  assert.equal(stop(old, env), 2);
+});
+
+test('an existing worktree edited through Edit/Write before any stop there is still caught', () => {
+  const { dir, git } = repo();
+  git('worktree', 'add', '-q', '.worktrees/old', '-b', 'old');
+  const old = path.join(dir, '.worktrees', 'old');
+  const env = { ...process.env, CLAUDE_CONFIG_DIR: tmp('uc wt cfg '), CLAUDE_PROJECT_DIR: dir, UC_PROFILE: 'strict' };
+  run('session-start.mjs', { session_id: 's', cwd: dir }, env);
+  fs.writeFileSync(path.join(old, 'code.js'), 'edited\n');
+  run('track-edit.mjs', { session_id: 's', cwd: dir, tool_name: 'Edit', tool_input: { file_path: path.join(old, 'code.js') } }, env);
+  assert.equal(stop(dir, env), 2);
+});
