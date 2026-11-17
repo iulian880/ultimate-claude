@@ -73,5 +73,8 @@ and if neither sets it, the profile is STANDARD.
   Work closed that way must be reported as not verified.
 
 In MINIMAL and STANDARD the gate does nothing. `block-destructive` is active in every profile: it blocks
-`rm -rf`, `git reset --hard`, `git push --force`, `Remove-Item -Recurse -Force` and `rd /s /q`; the user can
-still run those commands by hand.
+`rm -rf`, `git reset --hard`, `git push --force`, git commands that throw away work or branches (`git clean -f`,
+`git checkout -- .`, `git restore .`, `git stash drop|clear`, `git branch -D`, `git push --delete|--mirror|--prune`),
+recursive PowerShell deletes in any short form (`Remove-Item -r`, `ri`, `del`, `erase`), `rd /s /q` and `del /s`.
+Text that only mentions such a command (a commit message, a grep pattern) is not blocked. If the guard itself cannot
+run, the command is blocked too. The user can still run these commands by hand.

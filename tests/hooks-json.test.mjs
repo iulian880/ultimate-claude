@@ -34,3 +34,13 @@ test('every command references an existing file under plugins/uc-core/hooks', ()
 test('lintPlugin reports no problems for uc-core', () => {
   assert.deepEqual(lintPlugin(pluginDir), []);
 });
+
+test('the guards block the tool call when they cannot run (node missing, crash): onFailure "block"', () => {
+  const { hooks } = config();
+  assert.equal(hooks.PreToolUse[0].hooks[0].onFailure, 'block');
+  const excel = JSON.parse(fs.readFileSync(path.join(pluginDir, '..', 'uc-excel', 'hooks', 'hooks.json'), 'utf8'));
+  assert.equal(excel.hooks.PreToolUse[0].hooks[0].onFailure, 'block');
+  for (const event of ['SessionStart', 'UserPromptSubmit', 'PostToolUse', 'Stop']) {
+    assert.equal(hooks[event][0].hooks[0].onFailure, undefined, `${event} must not block on its own failure`);
+  }
+});
