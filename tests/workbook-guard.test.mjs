@@ -194,3 +194,13 @@ test('CLI strict: globs and cd are caught; backups are found at the project root
   assert.equal(run('rm ../livrabile/a.xlsm', path.join(proj, 'tools'), proj).status, 0);
   assert.equal(run('rm livrabile/*.xlsm', proj).status, 0);
 });
+
+test('more read-only commands are not targets; git commands that overwrite still are', () => {
+  for (const c of ['unzip -o "Robot SAP v3.xlsm" -d /tmp/x', 'unzip a.xlsm', 'olevba "Robot SAP v3.xlsm"',
+    'cat a.xlsm | wc -c', 'xxd a.xlsm | head', 'strings a.xlsm', 'git add "livrabile/Robot SAP v3.10.xlsm"',
+    'git diff --stat a.xlsm', 'git log -- a.xlsm', 'git status a.xlsm']) {
+    assert.deepEqual(bash(c), [], c);
+  }
+  assert.deepEqual(bash('git checkout -- a.xlsm'), ['a.xlsm']);
+  assert.deepEqual(bash('git restore a.xlsm'), ['a.xlsm']);
+});
