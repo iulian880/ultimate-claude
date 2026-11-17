@@ -31,12 +31,26 @@ export function readSession(sessionId, env = process.env) {
   }
 }
 
-/** Merges `patch` into the session file, creating directories as needed. */
+/**
+ * Merges `patch` into the session file, creating directories as needed. Writes a temporary file and renames it over
+ * the old one, so a hook reading at the same moment sees either the old or the new content, never half of it.
+ */
 export function updateSession(sessionId, patch, env = process.env) {
   const file = sessionFile(sessionId, env);
   fs.mkdirSync(path.dirname(file), { recursive: true });
   const next = { ...readSession(sessionId, env), ...patch };
-  fs.writeFileSync(file, `${JSON.stringify(next, null, 2)}\n`);
+  const text = `${JSON.stringify(next, null, 2)}\n`;
+  const temp = `${file}.${process.pid}.${Math.random().toString(16).slice(2)}.tmp`;
+  try {
+    fs.writeFileSync(temp, text);
+    try {
+      fs.renameSync(temp, file);
+    } catch {
+      fs.writeFileSync(file, text); // Windows refuses the rename while another process has the file open
+    }
+  } finally {
+    fs.rmSync(temp, { force: true });
+  }
 }
 
 function normalizeProfile(value) {

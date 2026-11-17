@@ -72,3 +72,30 @@ test('resolveProfile ignores an invalid session profile and uses env', () => {
   updateSession('s', { profile: 'turbo' }, env);
   assert.equal(resolveProfile({ sessionId: 's', env }), 'strict');
 });
+
+test('a reader never sees a half-written session file while another hook writes it', async () => {
+  const env = tempEnv();
+  const lib = new URL('../plugins/uc-core/hooks/lib/state.mjs', import.meta.url).href;
+  updateSession('race', { profile: 'strict', pad: 'x'.repeat(200000) }, env);
+  const { spawn } = await import('node:child_process');
+  const writer = spawn(process.execPath, ['--input-type=module', '-e', `
+    import { updateSession } from ${JSON.stringify(lib)};
+    const env = { CLAUDE_CONFIG_DIR: ${JSON.stringify(env.CLAUDE_CONFIG_DIR)} };
+    const end = Date.now() + 1500;
+    let i = 0;
+    while (Date.now() < end) updateSession('race', { n: i++ }, env);
+  `]);
+  const done = new Promise((resolve) => writer.on('exit', resolve));
+  let lost = 0;
+  let reads = 0;
+  const end = Date.now() + 1500;
+  while (Date.now() < end) {
+    reads += 1;
+    if (readSession('race', env).profile !== 'strict') lost += 1;
+    if (reads % 50 === 0) await new Promise((r) => setImmediate(r));
+  }
+  await done;
+  assert.equal(lost, 0, `${lost} of ${reads} reads lost the profile`);
+  const dir = path.join(env.CLAUDE_CONFIG_DIR, 'uc', 'sessions');
+  assert.deepEqual(fs.readdirSync(dir), ['race.json'], 'no temporary files left behind');
+});
