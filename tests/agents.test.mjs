@@ -125,3 +125,14 @@ test('release-gate records the working-tree fingerprint with the hook script', (
   assert.ok(text.includes('node "${CLAUDE_PLUGIN_ROOT}/hooks/fingerprint.mjs"'));
   assert.ok(text.includes('"tree"'));
 });
+
+test('architect, code-reviewer and qa-engineer keep project memory, limited to their memory folder', () => {
+  for (const name of ['architect', 'code-reviewer', 'qa-engineer']) {
+    const text = read(name);
+    assert.equal(parseFrontmatter(text).memory, 'project', name);
+    assert.ok(text.includes('## Project memory'), name);
+    assert.ok(text.includes('only inside your memory folder'), name);
+    assert.ok(text.includes('no secrets'), name);
+  }
+  assert.equal(parseFrontmatter(read('release-gate')).memory, undefined);
+});
