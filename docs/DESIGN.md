@@ -17,7 +17,10 @@ rezultatului, cu complexitate acolo unde e justificată (Intelligent Complexity)
 **Scopuri**
 - Fiecare etapă a lucrului are un singur proprietar (tabelul din §6).
 - Trei niveluri de rigoare (MINIMAL, STANDARD, STRICT) care schimbă verificarea, nu libertatea de gândire.
-- Totul fixat la o versiune, instalabil și dezinstalabil reproductibil pe Mac și Windows.
+- Totul fixat la o versiune, instalabil și dezinstalabil reproductibil pe Mac și Windows. Excepție: plugin-urile
+  proprii (`uc-core`, `uc-excel`) nu au `version`, ca o instalare din git să urmeze commiturile (cu `version` fix,
+  `claude plugin update` nu aduce nimic nou). Pe Mac, marketplace-ul adăugat din folder le încarcă direct din repo:
+  orice modificare, chiar necomisă, ajunge în Robot SAP la următoarea sesiune.
 - Efectul setup-ului este măsurat (benchmark §10), nu presupus.
 
 **Non-scopuri**

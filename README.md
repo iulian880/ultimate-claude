@@ -14,6 +14,10 @@ Plans are in [docs/plans/](docs/plans/), and what was verified on which machine 
 `components.lock.json` lists the third-party components with pinned versions; `installer/proposals/global-claude-md.md`
 is the global `CLAUDE.md` block.
 
+The plugins have no `version` on purpose. Installed from git, Claude Code then uses the commit, so
+`claude plugin update` delivers every pushed fix. Added from this folder (the Mac setup), they load straight from
+the working tree: projects that use them see any change, committed or not, at their next session.
+
 ## Use
 
 Requires Node.js >= 22. No npm dependencies.
