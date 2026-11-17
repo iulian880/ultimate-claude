@@ -3,6 +3,9 @@
   "owner": {
     "name": "ultimate-claude"
   },
+  "metadata": {
+    "description": "Private marketplace for the Ultimate Claude Code setup: uc-core, later uc-web and uc-excel."
+  },
   "plugins": [
     {
       "name": "uc-core",
