@@ -225,3 +225,12 @@ test('CLI strict PowerShell: the backup copy passes, overwriting an existing wor
   assert.equal(ps('Copy-Item -Path a.xlsm -Destination backups\\a.20261117-150000.xlsm').status, 0);
   assert.equal(ps('Copy-Item a.xlsm b.xlsm').status, 2);
 });
+
+test('CLI: an internal error blocks in STRICT and only warns elsewhere', () => {
+  const base = tmp('uc wb cfg ');
+  const input = { session_id: 'err', cwd: base, tool_name: 'Write', tool_input: null };
+  const strict = runGuard(input, { profile: 'strict', base });
+  assert.equal(strict.status, 2);
+  assert.match(strict.stderr, /uc-excel workbook-guard could not check this call/);
+  assert.equal(runGuard(input, { profile: undefined, base }).status, 0);
+});

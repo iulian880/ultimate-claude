@@ -64,3 +64,11 @@ test('excel-vba template: .gitignore and CLAUDE.md sections', () => {
   }
   for (const c of ['Lint', 'Build', 'Compile check', 'Tests', 'Full check']) assert.ok(md.includes(c), c);
 });
+
+test('excel-vba-reviewer keeps project memory, limited to its memory folder', () => {
+  const text = read('agents', 'excel-vba-reviewer.md');
+  assert.equal(parseFrontmatter(text).memory, 'project');
+  assert.ok(text.includes('## Project memory'));
+  assert.ok(text.includes('only inside your memory folder'));
+  assert.ok(text.includes('no secrets'));
+});

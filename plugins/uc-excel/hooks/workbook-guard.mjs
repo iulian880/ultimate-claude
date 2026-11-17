@@ -177,6 +177,23 @@ export function hasFreshBackup(workbook, projectDir, startedAt) {
 }
 
 export function handle(input) {
+  try {
+    return evaluate(input);
+  } catch (err) {
+    // Fail closed in STRICT: an error here must not let a workbook write through unchecked.
+    let strict = false;
+    try {
+      strict = resolveProfile({ sessionId: input?.session_id }) === 'strict';
+    } catch {
+      strict = process.env.UC_PROFILE?.trim().toLowerCase() === 'strict';
+    }
+    const reason = `uc-excel workbook-guard could not check this call (${err?.message ?? err}).`;
+    if (strict) return { exit: 2, stderr: `${reason} Back up the workbook to backups/ and retry, or ask the user.` };
+    return { exit: 0, stdout: JSON.stringify({ hookSpecificOutput: { hookEventName: 'PreToolUse', additionalContext: reason } }) };
+  }
+}
+
+function evaluate(input) {
   if (input === null) return { exit: 0 };
   const targets = workbookTargets(input.tool_name, input.tool_input);
   if (targets.length === 0) return { exit: 0 };
