@@ -82,7 +82,7 @@ Context7 CLI și Playwright CLI). *Decizia mea — vezi §12.*
 |---|---|---|
 | Agent | `architect` | explorează 2–3 arhitecturi, compromisuri, scrie ADR; preîncarcă skills-urile mattpocock `codebase-design` și `domain-modeling`; model Opus, efort high; doar citire + scriere în `docs/adr/` |
 | Agent | `qa-engineer` | strategie de testare proporțională cu riscul, edge cases, lacune de acoperire; poate rula testele |
-| Agent | `code-reviewer` | review independent, în context proaspăt: bug-uri, calitate, mentenabilitate, respectarea ADR-urilor și a spec-ului; doar citire. Este reviewerul pe care îl folosește pasul de review din Superpowers |
+| Agent | `code-reviewer` | review de conformitate, după review-ul de cod al Superpowers: criteriile din spec, ADR-urile, regulile proiectului, riscul transversal, rezolvarea constatărilor Superpowers; decizia APPROVE/BLOCK; nu repetă corectitudinea linie cu linie; doar citire |
 | Agent | `release-gate` | verifică criteriile de acceptanță din spec față de dovezi (output de teste, build, screenshot); verdict PASS/FAIL cu motive; doar citire + rulare |
 | Skill | `complexity-check` | ghid de decizie Intelligent Complexity: când o abstracție/strat e justificat (scalabilitate, mentenanță, fiabilitate, securitate, performanță, extensibilitate, UX, testabilitate) și când nu |
 | Skill | `product-discovery` | întrebări de produs înainte de brainstorm (utilizator, problemă, alternativă existentă, criteriu de succes) — idei preluate din gstack, rescrise, fără instalarea lui |
@@ -92,11 +92,12 @@ Context7 CLI și Playwright CLI). *Decizia mea — vezi §12.*
 | Hook | `profile-gate` | în STRICT: la Stop/TaskCompleted cere dovada de verificare înainte de „gata"; în MINIMAL/STANDARD nu face nimic |
 
 Review-ul de securitate rămâne la comanda nativă `/security-review` (plus pluginul `security-guidance` deja instalat) —
-nu scriem agent propriu pentru el. Review-ul de cod îl deține agentul propriu `code-reviewer` (cerut de utilizator);
-`/code-review` nativ rămâne disponibil la cerere, ca a doua opinie, nu ca pas obligatoriu. *6 agenți proprii, nu 7.*
+nu scriem agent propriu pentru el. Review-ul de cod (pe task în SDD și final, pe tot branch-ul) îl face Superpowers;
+agentul propriu `code-reviewer` (cerut de utilizator) face review-ul de conformitate și ia decizia (aprobat de utilizator pe
+17.11.2026, după auditul Superpowers). `/code-review` nativ rămâne disponibil la cerere, ca a doua opinie. *6 agenți proprii, nu 7.*
 
 Filosofia (Intelligent Complexity, reguli de delegare, precedență) stă într-un bloc scurt din `~/.claude/CLAUDE.md`,
-sub 35 de linii, propus de installer și aplicat doar cu acord. Un plugin nu poate livra `CLAUDE.md`.
+sub 40 de linii (ridicat de la 35 pe 17.11.2026, pentru regula de execuție), propus de installer și aplicat doar cu acord. Un plugin nu poate livra `CLAUDE.md`.
 
 ### 5.3 `uc-web` (activ doar în proiectele web)
 
@@ -188,7 +189,7 @@ recunoaște o comandă de scriere; versiunile exacte fixate pentru LibreOffice �
 | Etapă | Proprietar |
 |---|---|
 | Descoperire de produs | skill `product-discovery` |
-| Brainstorm, plan, execuție, TDD, debugging | Superpowers |
+| Brainstorm, plan, execuție, TDD, debugging | Superpowers (alegerea între inline și SDD: regula din `CLAUDE.md` global) |
 | Arhitectură și ADR | agent `architect` (+ skills mattpocock) |
 | Decizia „cât de complex" | skill `complexity-check` |
 | Plan persistent pe mai multe sesiuni | Planning with Files (doar STRICT) |
@@ -199,7 +200,8 @@ recunoaște o comandă de scriere; versiunile exacte fixate pentru LibreOffice �
 | Verificare în browser | Playwright CLI; Chrome doar cu `--chrome` |
 | Review UI | agent `frontend-reviewer` |
 | Strategia de testare | agent `qa-engineer` |
-| Review de cod | agent `code-reviewer` (`/code-review` nativ doar la cerere) |
+| Review de cod | Superpowers (pe task în SDD, final pe branch) (`/code-review` nativ doar la cerere) |
+| Review de conformitate și decizia APPROVE/BLOCK | agent `code-reviewer` |
 | Review de securitate | `/security-review` nativ + `security-guidance` |
 | Review VBA | agent `excel-vba-reviewer` |
 | Review bază de date (schemă, interogări, migrații) | agent `database-reviewer` (din ECC, adaptat) |
@@ -214,8 +216,8 @@ Două straturi: **ghidaj** (un tabel de 6–8 linii în `CLAUDE.md` global) și 
 | | MINIMAL | STANDARD (implicit) | STRICT |
 |---|---|---|---|
 | Când | typo, redenumire, bugfix într-o funcție | dezvoltare obișnuită | sisteme critice, migrații, VBA important, securitate, date |
-| Proces | direct + o verificare | brainstorm → plan → execuție → verificare | + `architect` și ADR, plan persistent, `qa-engineer` |
-| Review | — | `code-reviewer` | `code-reviewer` + `/security-review` + reviewerul de domeniu + `release-gate` |
+| Proces | direct + o verificare | brainstorm → plan → execuție aleasă pe plan → verificare | + `architect` (după brainstorm) și ADR, plan persistent, `qa-engineer` |
+| Review | — | review-urile Superpowers + `code-reviewer` (conformitate) | STANDARD + `/security-review` + reviewerul de domeniu + `release-gate` |
 | Garanții (hooks) | `block-destructive` | la fel | + `profile-gate`, `workbook-guard` strict |
 
 Mecanism (gândit pentru aplicația desktop, suprafața principală a utilizatorului, unde nu există flag-uri de pornire).
