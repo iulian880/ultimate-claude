@@ -59,22 +59,19 @@ ultimate-claude/
 │   │       ├── docs/adr/  docs/specs/
 │   │       ├── design-system/MASTER.md
 │   │       └── checklists/{security,performance,release}.md
-│   └── uc-excel/                             [4] enabled per Excel/VBA project; tools run on Windows only
-│       ├── .claude-plugin/plugin.json
-│       ├── agents/excel-vba-reviewer.md
-│       ├── skills/
-│       │   ├── vba-workflow/SKILL.md
-│       │   └── vba-standards/SKILL.md
+│   └── uc-excel/                             [4] enabled per Excel/VBA project; development and checks on the Mac
+│       ├── .claude-plugin/plugin.json        depends on uc-core
+│       ├── agents/excel-vba-reviewer.md      VBA-specific review, session model
+│       ├── skills/vba-workflow/SKILL.md      backup, sources only, lint, build, compile, tests, user docs
 │       ├── hooks/
 │       │   ├── hooks.json
-│       │   └── workbook-guard.mjs            PreToolUse: backup required before workbook writes
+│       │   ├── session-start.mjs             SessionStart: records the session start
+│       │   ├── workbook-guard.mjs            PreToolUse: backup required before workbook writes
+│       │   └── lib/                          byte-identical copy of uc-core hooks/lib
 │       └── templates/excel-vba/
-│           ├── CLAUDE.md
-│           ├── .claude/settings.json         enabledPlugins: uc-excel
-│           ├── src/  tests/  fixtures/  golden/
-│           ├── backups/                      git-ignored
-│           ├── tests/Workbook.Tests.ps1      Pester harness
-│           └── docs/{vba-standards,deployment-rollback}.md
+│           ├── CLAUDE.md                     what it is, commands, user documentation, rules
+│           ├── .claude/settings.json         enabledPlugins: uc-core, uc-excel; UC_PROFILE standard
+│           └── .gitignore                    backups/, .venv/, archives
 ├── installer/                                [5]
 │   ├── install.ps1                           thin entry: checks Node, calls uc-setup.mjs
 │   ├── install.sh                            thin entry
@@ -115,7 +112,7 @@ Files written outside the repo at runtime (never committed):
 | 1 | uc-core | repo, linter, 4 agents, 4 skills, 4 hook scripts, profiles, lockfile, ADRs | — |
 | 2 | Migration of the existing setup (v3 → V2) | old global rules and duplicate hooks removed with consent (RTK stays, bypassed by the verifying agents); new global `CLAUDE.md` block; plugin audit | 1 |
 | 3 | uc-web | frontend-reviewer, database-reviewer, `ui-improve`, web-app template; Playwright CLI, UI UX Pro Max, Frontend Design wired in | 1 |
-| 4 | uc-excel | excel-vba-reviewer, `vba-workflow`, `workbook-guard`, template; xlflow vs xlwings spike | 1, Windows 11 + Excel 64-bit |
+| 4 | uc-excel | excel-vba-reviewer, `vba-workflow`, `workbook-guard`, template; Robot SAP on the Mac toolchain (LibreOffice, Python venv) | 1 |
 | 5 | Installer | detect / preview / backup / apply / verify / uninstall / rollback; CI on macOS and Windows | 1–4 |
 | 6 | Benchmark and real Windows test | pilot benchmark, context budget, full Windows verification | 1–5 |
 

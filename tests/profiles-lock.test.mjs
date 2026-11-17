@@ -10,7 +10,7 @@ const root = fileURLToPath(new URL('..', import.meta.url));
 const json = (...parts) => JSON.parse(fs.readFileSync(path.join(root, ...parts), 'utf8'));
 const KEYS = ['name', 'source', 'version', 'license', 'scope', 'default', 'install', 'uninstall', 'verify',
   'bringsHooks', 'bringsMcp', 'alwaysOnTokens'];
-const OPT_IN = ['planning-with-files', 'graphify', 'ponytail', 'mcp-server-excel'];
+const OPT_IN = ['planning-with-files', 'graphify', 'ponytail'];
 
 test('each profile file sets the matching UC_PROFILE and nothing else', () => {
   for (const name of ['minimal', 'standard', 'strict']) {
@@ -37,7 +37,7 @@ test('lockfile: schema 1, every entry has exactly the twelve keys, names are uni
   assert.equal(new Set(names).size, names.length);
 });
 
-test('lockfile: the four opt-in components have default === false', () => {
+test('lockfile: the opt-in components have default === false', () => {
   const byName = new Map(json('components.lock.json').components.map((c) => [c.name, c]));
   for (const name of OPT_IN) assert.equal(byName.get(name)?.default, false, name);
 });
@@ -66,3 +66,16 @@ test('bin/uc: unknown profile prints usage and exits 1; a known one starts claud
     const expected = fs.realpathSync(path.join(root, 'plugins', 'uc-core', 'profiles', 'strict.json'));
     assert.deepEqual(ok.stdout.trim().split('\n'), ['--settings', expected, '--version']);
   });
+
+test('lockfile: Excel tooling is the Mac toolchain, not the Windows-only tools', () => {
+  const byName = new Map(json('components.lock.json').components.map((c) => [c.name, c]));
+  for (const gone of ['xlflow', 'xlwings', 'pester', 'psscriptanalyzer', 'mcp-server-excel']) {
+    assert.equal(byName.has(gone), false, gone);
+  }
+  for (const name of ['libreoffice', 'openpyxl', 'olefile', 'oletools']) {
+    assert.equal(byName.get(name)?.scope, 'project', name);
+  }
+  for (const name of ['openpyxl', 'olefile', 'oletools']) {
+    assert.match(byName.get(name).install, new RegExp(`pip install ${name}==${byName.get(name).version.replace(/\./g, '\\.')}`));
+  }
+});
