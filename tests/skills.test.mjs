@@ -45,6 +45,12 @@ test('delivery-report has the five sections and cites the verification proof', (
   }
 });
 
+test('uc-profile table matches the global block: execution per plan, reviews split', () => {
+  const rows = read('uc-profile').split('\n');
+  assert.ok(rows.find((r) => r.startsWith('| Process')).includes('chosen per plan'));
+  assert.ok(rows.find((r) => r.startsWith('| Review')).includes('Superpowers reviews'));
+});
+
 test('delivery-report carries the Superpowers rulings and deferred minors', () => {
   const text = read('delivery-report');
   assert.ok(text.includes('Rulings I made'));
