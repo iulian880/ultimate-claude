@@ -85,7 +85,7 @@ export function workbookTargets(toolName, toolInput = {}) {
   return [...new Set(segments(tokenize(command)).flatMap(segmentTargets))];
 }
 
-/** True when backups/ holds <base>.<YYYYMMDD-HHMMSS><ext> modified at or after the session start. */
+/** True when backups/ holds <base>.<YYYYMMDD-HHMMSS><ext> created or modified at or after the session start. */
 export function hasFreshBackup(workbook, projectDir, startedAt) {
   const ext = path.extname(workbook);
   const base = path.basename(workbook, ext);
@@ -102,7 +102,9 @@ export function hasFreshBackup(workbook, projectDir, startedAt) {
     if (!name.startsWith(prefix) || !name.toLowerCase().endsWith(ext.toLowerCase())) return false;
     if (!/^\d{8}-\d{6}$/.test(name.slice(prefix.length, name.length - ext.length))) return false;
     try {
-      return fs.statSync(path.join(dir, name)).mtimeMs >= since;
+      // ctime marks when the copy appeared; mtime alone misses `cp -p`, which keeps the source's old date.
+      const st = fs.statSync(path.join(dir, name));
+      return Math.max(st.mtimeMs, st.ctimeMs) >= since;
     } catch {
       return false;
     }
