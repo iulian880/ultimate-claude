@@ -34,8 +34,15 @@ test('complexity-check names all eight criteria and the guiding sentence', () =>
   assert.ok(text.includes('simplicity and yagni are decision tools, not prohibitions'));
 });
 
-test('product-discovery hands off to superpowers:brainstorming', () => {
-  assert.ok(read('product-discovery').includes('superpowers:brainstorming'));
+test('product-discovery checks existing capabilities before searching and validating candidates', () => {
+  const text = read('product-discovery');
+  const steps = ['available skills and tools', 'search available skill catalogs', 'actual SKILL.md', 'representative check'];
+  let start = 0;
+  for (const step of steps) {
+    const index = text.indexOf(step, start);
+    assert.ok(index >= start, step);
+    start = index + step.length;
+  }
 });
 
 test('delivery-report has the five sections and cites the verification proof', () => {

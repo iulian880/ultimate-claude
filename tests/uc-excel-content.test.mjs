@@ -22,7 +22,7 @@ test('excel-vba-reviewer: VBA checks only, uc-core report shape, no 32/64-bit ch
   const text = read('agents', 'excel-vba-reviewer.md');
   assert.ok(body(text).split('\n').length <= 80);
   for (const w of ['ScreenUpdating', 'On Error', 'ActiveSheet', 'confidence', '80', 'APPROVE', 'BLOCK',
-    '`rtk bypass <command>`', 'conformance']) {
+    '`rtk bypass <command>`', 'conformance', 'unresolved material condition', 'evidence needed to clear it']) {
     assert.ok(text.includes(w), w);
   }
   assert.doesNotMatch(text, /PtrSafe|LongPtr|Win64|VBA7/);
@@ -45,7 +45,7 @@ test('vba-workflow: the seven steps in order, commands from CLAUDE.md, Windows i
     assert.ok(i > at - 1 && i !== -1, `step out of order or missing: ${step}`);
     at = i;
   }
-  for (const w of ['CLAUDE.md', 'excel-vba-reviewer', 'YYYYMMDD-HHMMSS', 'MINIMAL', 'not an acceptance criterion']) {
+  for (const w of ['CLAUDE.md', 'excel-vba-reviewer', 'YYYYMMDD-HHMMSS', 'MINIMAL', 'mark the criterion unverified']) {
     assert.ok(text.includes(w), w);
   }
 });

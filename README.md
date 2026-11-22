@@ -76,3 +76,5 @@ The `uc-core` agents are our own text. Some techniques in them were adapted, not
 npm test
 npm run lint
 ```
+
+See the [component selection rules](plugins/uc-core/component-routing.md) and [routing evaluation](docs/component-routing-eval.md).

@@ -91,7 +91,7 @@ Context7 CLI și Playwright CLI). *Decizia mea — vezi §12.*
 | Agent | `code-reviewer` | review de conformitate, după review-ul de cod al Superpowers: criteriile din spec, ADR-urile, regulile proiectului, riscul transversal, rezolvarea constatărilor Superpowers; decizia APPROVE/BLOCK; nu repetă corectitudinea linie cu linie; doar citire |
 | Agent | `release-gate` | verifică criteriile de acceptanță din spec față de dovezi (output de teste, build, screenshot); verdict PASS/FAIL cu motive; doar citire + rulare |
 | Skill | `complexity-check` | ghid de decizie Intelligent Complexity: când o abstracție/strat e justificat (scalabilitate, mentenanță, fiabilitate, securitate, performanță, extensibilitate, UX, testabilitate) și când nu |
-| Skill | `product-discovery` | întrebări de produs înainte de brainstorm (utilizator, problemă, alternativă existentă, criteriu de succes) — idei preluate din gstack, rescrise, fără instalarea lui |
+| Skill | `product-discovery` | caută un skill suplimentar când proiectul cere o capabilitate pe care skill-urile, instrumentele și sistemul actual nu o acoperă |
 | Skill | `delivery-report` | raportul final: ce s-a făcut, ce s-a verificat și cum, ce a rămas neverificat |
 | Skill | `uc-profile` | explică profilul activ și ce impune |
 | Hook | `block-destructive` | PreToolUse, în plugin; varianta globală veche rămâne până la installer (vezi §9) |
@@ -210,7 +210,7 @@ recunoaște o comandă de scriere; versiunile exacte fixate pentru LibreOffice �
 
 | Etapă | Proprietar |
 |---|---|
-| Descoperire de produs | skill `product-discovery` |
+| Identificarea unui skill pentru o capabilitate lipsă | skill `product-discovery` |
 | Brainstorm, plan, execuție, TDD, debugging | Superpowers (alegerea între inline și SDD: regula din `CLAUDE.md` global) |
 | Arhitectură și ADR | agent `architect` (+ skills mattpocock) |
 | Decizia „cât de complex" | skill `complexity-check` |

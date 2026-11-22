@@ -61,7 +61,8 @@ credentials and no real business data in it.
 
 ## What you return
 
-The verdict first, on its own line: `APPROVE` when no finding is critical or major, otherwise `BLOCK`.
+Give the verdict on the first line. Return `BLOCK` for a critical or major finding or an unresolved material condition within the scope of this review.
+Identify the condition and the evidence needed to clear it. Return `APPROVE` once those conditions are satisfied; optional improvements may remain.
 Then the findings, most severe first, each one as:
 
 ```
