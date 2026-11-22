@@ -13,9 +13,9 @@ not turn plugins on or off.
 
 | | MINIMAL | STANDARD (default) | STRICT |
 |---|---|---|---|
-| When | typo, rename, a bug fix inside one function | everyday development | critical systems, migrations, important VBA, security, data |
-| Process | do it directly, then one check | brainstorm -> plan -> execution chosen per plan -> verify | STANDARD + `architect` agent and an ADR between brainstorming and writing-plans, `qa-engineer` agent |
-| Review | none | Superpowers reviews, then the `code-reviewer` conformance review before finishing the branch | STANDARD + `/security-review` + the domain reviewer + `release-gate` agent |
+| When | Local, reversible, immediately observable | Product behaviour with a representative test | Data, money, migrations, compatibility or irreversible effects |
+| Process | Execute directly and check once | Execution chosen per plan; reproduce bugs first; plan when uncertainty warrants it | Use an architect between brainstorming and writing-plans for costly design decisions; QA for significant failure modes |
+| Review | One focused check | Use Superpowers reviews if available or one combined review; add conformance before finishing the branch only for a named contract, ADR or compatibility obligation | Independent release-gate and the relevant domain checks |
 | Enforced by hooks | `block-destructive` (+ `workbook-guard` warns) | `block-destructive` (+ `workbook-guard` warns) | `block-destructive` + the verification gate (+ `workbook-guard` blocks) |
 
 The process and review rows are guidance that you follow. Only the last row is enforced by hooks.
@@ -32,9 +32,15 @@ The hooks resolve the profile in this order:
 `<config dir>` is `CLAUDE_CONFIG_DIR` when it is set, otherwise `~/.claude`. A value other than `minimal`,
 `standard` or `strict` is ignored.
 
-When the user asks which profile is active: if a line "UC profile for this session is now ..." appeared in
-this session, that is the answer. Otherwise check `UC_PROFILE` and the project's `.claude/settings.json`,
-and if neither sets it, the profile is STANDARD.
+For status in Desktop, run `node "${CLAUDE_PLUGIN_ROOT}/hooks/cli.mjs" status` from the project;
+supply `--session ID` when the session ID is available. Use the confirmed session switch if the shell lacks that ID.
+The CLI reports the source, local component inventory and current proof. An unknown component stays unknown.
+
+A single invoice calculation can need STRICT; ten mechanical renames can be MINIMAL. Honour explicit STRICT.
+Use inline execution for coupled changes. Delegate independent work when context isolation earns its cost;
+give the agent its scope, criteria and evidence expected. Agent teams stay off by default.
+Get the user's agreement before a separately billed batch. For long handoffs preserve decisions,
+remaining criteria, evidence and the next action. Global personal rules can be updated independently.
 
 ## How to switch
 
@@ -66,7 +72,8 @@ and if neither sets it, the profile is STANDARD.
   that already existed counts from the state the session first found it in. Other repositories are left alone.
 - The `release-gate` agent writes its proof to `.uc/verification/<timestamp>.json` in the project root. It counts
   only when complete: PASS, every check passed, at least one criterion and all VERIFIED, nothing left unverified,
-  the same fingerprint before and after the checks, and that fingerprint equal to the current code.
+  the same fingerprint before and after the checks, and that fingerprint equal to the current code. Version 2 also binds the active acceptance criteria and platform.
+  Use `uc verify --check` for the independent Git release decision.
 - The fingerprint does not see changes inside git submodules or nested repositories, in files marked
   `assume-unchanged` or `skip-worktree`, or in ignored files. Verify those by hand.
 - When you try to stop and the code changed with no such proof, the stop is blocked once with:

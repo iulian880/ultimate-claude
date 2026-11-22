@@ -3,6 +3,7 @@
 // from, so profile-gate can tell whether this session changed the code by any means. Keeps the first value.
 import { isMain, runHook } from './lib/hook-io.mjs';
 import { projectDir, readSession, resolveProfile, updateSession } from './lib/state.mjs';
+import { contractState } from './lib/verification.mjs';
 import { treeFingerprint, worktreeRoots } from './lib/fingerprint.mjs';
 
 /** Start state of a session that edited files before it became STRICT: never equal to a real tree. */
@@ -15,15 +16,16 @@ export const UNKNOWN_START = 'unknown';
  */
 export function recordStartTree(sessionId, dir) {
   const session = readSession(sessionId);
-  if (session.startTree) return;
+  if (session.startTree || session.startContract !== undefined) return;
   // Worktrees that already exist belong to other work; the gate judges them from the state this session finds them in.
+  const startContract = contractState(dir);
   const startWorktrees = worktreeRoots(dir);
   if (session.lastEditAt) {
-    updateSession(sessionId, { startTree: UNKNOWN_START, startWorktrees });
+    updateSession(sessionId, { startTree: UNKNOWN_START, startWorktrees, startContract });
     return;
   }
   const tree = treeFingerprint(dir);
-  if (tree) updateSession(sessionId, { startTree: tree, startWorktrees });
+  updateSession(sessionId, { startTree: tree, startWorktrees, startContract });
 }
 
 export function handle(input) {

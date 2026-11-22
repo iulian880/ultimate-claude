@@ -1,0 +1,33 @@
+name: Verify marketplace
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  verify:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm test
+      - run: npm run lint
+      - run: npm install --global @anthropic-ai/claude-code@2.1.311
+      - run: claude plugin validate .
+      - run: claude plugin validate plugins/uc-core
+      - run: claude plugin validate plugins/uc-excel
+      - name: Exercise native Windows launcher
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          ./bin/uc.ps1 status
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          ./bin/uc.ps1 standard --version
+          exit $LASTEXITCODE

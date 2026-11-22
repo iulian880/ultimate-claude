@@ -1,5 +1,8 @@
 # Ultimate Claude Code Setup V2 — design
 
+> Actualizare 22.11.2026. Repository-ul este public. Pentru politica actuală de profiluri, review și dovezi v2, vezi [README](../README.md). Documentul păstrează contextul deciziei inițiale.
+
+
 Data: 16 noiembrie 2026. Stare: **aprobat de utilizator pe 17.11.2026, cu o schimbare: agentul propriu `code-reviewer` rămâne**. Implementat de atunci: `uc-core` (Planurile 1 și 1b), migrarea Mac-ului (Planul 2) și `uc-excel` (Planul 4); ce s-a verificat, cum și ce a rămas neverificat e în `docs/verification/`. `uc-web`, installerul și benchmark-ul nu sunt încă făcute.
 Înlocuiește `SETUP-SPEC.md` (v3) după aprobare. Sursele auditului: patru cercetări web din 16.11.2026 (versiuni și linkuri în Anexa A).
 
