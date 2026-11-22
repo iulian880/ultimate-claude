@@ -104,6 +104,12 @@ test('code-reviewer accepts Superpowers findings re-graded to deferred minors', 
   assert.ok(read('code-reviewer').includes('re-graded'));
 });
 
+test('code-reviewer blocks unresolved material conditions instead of issuing conditional approval', () => {
+  const text = read('code-reviewer');
+  assert.ok(text.includes('unresolved material condition'));
+  assert.ok(text.includes('evidence needed to clear it'));
+});
+
 test('architect runs after brainstorming and does not redo the user-facing choice', () => {
   const text = read('architect');
   assert.ok(text.includes('after brainstorming'));
