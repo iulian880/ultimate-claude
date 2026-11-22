@@ -45,7 +45,7 @@ test('delivery-report has the five sections and cites the verification proof', (
   }
 });
 
-test('uc-profile table matches the global block: execution per plan, reviews split', () => {
+test('uc-profile owns execution routing and distinct review obligations', () => {
   const rows = read('uc-profile').split('\n');
   assert.ok(rows.find((r) => r.startsWith('| Process')).includes('chosen per plan'));
   assert.ok(rows.find((r) => r.startsWith('| Review')).includes('Superpowers reviews'));
