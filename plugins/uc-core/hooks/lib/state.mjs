@@ -38,18 +38,46 @@ export function readSession(sessionId, env = process.env) {
 export function updateSession(sessionId, patch, env = process.env) {
   const file = sessionFile(sessionId, env);
   fs.mkdirSync(path.dirname(file), { recursive: true });
-  const next = { ...readSession(sessionId, env), ...patch };
-  const text = `${JSON.stringify(next, null, 2)}\n`;
-  const temp = `${file}.${process.pid}.${Math.random().toString(16).slice(2)}.tmp`;
-  try {
-    fs.writeFileSync(temp, text);
+  // Acquire before reading; rename alone cannot prevent two writers losing updates.
+  const lock = file + '.lock';
+  const pause = new Int32Array(new SharedArrayBuffer(4));
+  const deadline = Date.now() + 5000;
+  for (;;) {
     try {
-      fs.renameSync(temp, file);
-    } catch {
-      fs.writeFileSync(file, text); // Windows refuses the rename while another process has the file open
+      fs.mkdirSync(lock);
+      break;
+    } catch (error) {
+      if (error.code !== 'EEXIST' || Date.now() >= deadline) throw error;
+      Atomics.wait(pause, 0, 0, 10);
+    }
+  }
+  const temp = file + '.' + process.pid + '.tmp';
+  try {
+    const current = readSession(sessionId, env);
+    const next = { ...current, ...patch };
+    if (patch.worktrees) next.worktrees = [...new Set([...(current.worktrees ?? []), ...patch.worktrees])];
+    if (patch.startContracts) next.startContracts = { ...patch.startContracts, ...current.startContracts };
+    if (patch.starts) next.starts = { ...patch.starts, ...current.starts };
+    if (patch.gateBlocked) next.gateBlocked = { ...current.gateBlocked, ...patch.gateBlocked };
+    for (const key of ['startedAt', 'startTree', 'startContract', 'startWorktrees']) {
+      if (current[key] != null) next[key] = current[key];
+    }
+    for (const key of ['lastEditAt', 'gateBlockedAt']) {
+      if (Date.parse(current[key]) > Date.parse(next[key])) next[key] = current[key];
+    }
+    fs.writeFileSync(temp, JSON.stringify(next, null, 2) + '\n');
+    for (;;) {
+      try {
+        fs.renameSync(temp, file);
+        break;
+      } catch (error) {
+        if (!['EBUSY', 'EPERM', 'EACCES'].includes(error.code) || Date.now() >= deadline) throw error;
+        Atomics.wait(pause, 0, 0, 10);
+      }
     }
   } finally {
     fs.rmSync(temp, { force: true });
+    fs.rmdirSync(lock);
   }
 }
 

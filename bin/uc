@@ -4,16 +4,9 @@
 set -eu
 
 usage() {
-  echo "Usage: uc <minimal|standard|strict> [claude args...]" >&2
+  echo "Usage: uc <minimal|standard|strict> [claude args...] | uc status | uc verify <option>" >&2
   exit 1
 }
-
-[ "$#" -ge 1 ] || usage
-case "$1" in
-  minimal|standard|strict) profile="$1" ;;
-  *) usage ;;
-esac
-shift
 
 # Follow symlinks so the launcher also works when linked into a directory on PATH.
 self="$0"
@@ -25,5 +18,15 @@ while [ -L "$self" ]; do
   esac
 done
 root="$(cd "$(dirname "$self")/.." && pwd -P)"
+
+case "${1:-}" in
+  verify|status) exec node "$root/plugins/uc-core/hooks/cli.mjs" "$@" ;;
+esac
+[ "$#" -ge 1 ] || usage
+case "$1" in
+  minimal|standard|strict) profile="$1" ;;
+  *) usage ;;
+esac
+shift
 
 exec claude --settings "$root/plugins/uc-core/profiles/$profile.json" "$@"

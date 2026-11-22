@@ -83,8 +83,8 @@ test('it leaves no objects in the repository (audit 2026-11-18)', () => {
   assert.equal(count(), before);
 });
 
-test('a repository path with a colon gives the same tree as git itself', () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'uc fp col:on '));
+test('a repository path with the platform path-list delimiter gives the same tree as git itself', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), `uc fp col${path.delimiter}on `));
   const git = (...a) => execFileSync('git', ['-C', dir, ...a], { stdio: 'pipe' }).toString().trim();
   git('init', '-q', '-b', 'main');
   git('config', 'user.email', 'test@example.invalid');

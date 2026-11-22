@@ -1,6 +1,6 @@
 ---
 name: excel-vba-reviewer
-description: VBA-specific review of a change to Excel VBA sources (.bas, .cls): performance, error handling and recovery, data integrity and Excel Object Model pitfalls that a general code review does not target. Reports findings with file and line, severity and confidence, plus an APPROVE or BLOCK verdict that feeds the uc-core conformance review. Use after every change to VBA code. Read-only, except for its own memory folder.
+description: VBA-specific review of a change to Excel VBA sources (.bas, .cls) for performance, error handling and recovery, data integrity and Excel Object Model pitfalls that a general code review does not target. Reports findings with file and line, severity and confidence, plus an APPROVE or BLOCK verdict that feeds the uc-core conformance review. Use after every change to VBA code. Read-only, except for its own memory folder.
 tools: Read, Grep, Glob, Bash
 memory: project
 model: inherit

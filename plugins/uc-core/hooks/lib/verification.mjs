@@ -1,72 +1,94 @@
-// Reads the verification proofs written by the release-gate agent.
-// Schema: {"verdict": "PASS"|"FAIL", "at": "<ISO 8601>", "checks": [{command, exitCode, summary}],
-//          "criteria": [{criterion, status: "VERIFIED"|"FAILED"|"NOT PERFORMED", checks: [index]}], "unverified": [string],
-//          "treeBefore": "<fingerprint before the first check>", "tree": "<fingerprint after the last check>"}
-// Only a complete proof counts: verdict PASS, at least one check and every exitCode 0, at least one criterion and every
-// criterion VERIFIED, an empty `unverified` list. latestPassAt (non-git projects) then reads `at`; passingTrees (git
-// projects) also requires `tree` equal to `treeBefore` (the checks did not change the code).
+// Acceptance criteria belong to the current project/worktree. Bind a Markdown spec
+// once; changes to the criteria are picked up on every check, including CI.
 import fs from 'node:fs';
 import path from 'node:path';
+import { createHash, randomUUID } from 'node:crypto';
 
-/** Returns the `at` of the newest PASS in <projectDir>/.uc/verification/*.json, or null. */
-export function latestPassAt(projectDir) {
-  const dir = path.join(projectDir, '.uc', 'verification');
-  let names;
+const nonempty = value => typeof value === 'string' && value.trim().length > 0;
+const list = value => Array.isArray(value) && value.length > 0;
+
+export function atomicJson(file, data) {
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  const temp = file + '.' + randomUUID() + '.tmp';
   try {
-    names = fs.readdirSync(dir);
-  } catch {
-    return null;
+    fs.writeFileSync(temp, JSON.stringify(data, null, 2) + '\n', { flag: 'wx' });
+    fs.renameSync(temp, file);
+  } finally {
+    fs.rmSync(temp, { force: true });
   }
-  let newest = null;
-  for (const name of names) {
-    if (!name.endsWith('.json')) continue;
-    let proof;
+}
+
+export function contract(dir, source) {
+  if (source === undefined) {
     try {
-      proof = JSON.parse(fs.readFileSync(path.join(dir, name), 'utf8'));
-    } catch {
-      continue;
+      source = JSON.parse(fs.readFileSync(path.join(dir, '.uc/contract.json'), 'utf8')).source;
+    } catch (error) {
+      if (error.code !== 'ENOENT') throw error;
+      source = '.uc/criteria.md';
     }
-    if (!isComplete(proof) || typeof proof.at !== 'string') continue;
-    const time = Date.parse(proof.at);
-    if (Number.isNaN(time)) continue;
-    if (newest === null || time > Date.parse(newest)) newest = proof.at;
   }
-  return newest;
+  if (!nonempty(source) || path.isAbsolute(source)) throw Error('Expected a project-relative criteria file');
+  const file = fs.realpathSync.native(path.resolve(dir, source));
+  const relative = path.relative(fs.realpathSync.native(dir), file);
+  if (relative.startsWith('..' + path.sep) || relative === '..' || path.isAbsolute(relative)) throw Error('Criteria outside project');
+  source = relative.split(path.sep).join('/');
+  const sections = fs.readFileSync(file, 'utf8').replace(/\r\n/g, '\n').split(/^## /m).slice(1)
+    .filter(section => /^Acceptance criteria[ \t]*\n/i.test(section));
+  if (sections.length !== 1) throw Error('Expected one ## Acceptance criteria section');
+  const lines = sections[0].split('\n').slice(1).map(line => line.trim()).filter(Boolean);
+  if (!lines.length || lines.some(line => !/^[-*] \S/.test(line))) throw Error('Use one bullet per criterion');
+  const criteria = lines.map(line => line.slice(2).trim());
+  if (new Set(criteria).size !== criteria.length) throw Error('Duplicate acceptance criterion');
+  const digest = createHash('sha256').update(JSON.stringify([source, criteria])).digest('hex');
+  return { source, criteria, digest };
 }
 
-function readProofs(projectDir) {
-  const dir = path.join(projectDir, '.uc', 'verification');
-  let names;
-  try {
-    names = fs.readdirSync(dir);
-  } catch {
-    return [];
+export function contractState(dir) {
+  try { return contract(dir).digest; }
+  catch (error) { return error.code === 'ENOENT' ? 'missing' : 'invalid'; }
+}
+
+// Return one actionable diagnostic. The same contract is used at recording,
+// conversational Stop and independent release checks.
+export function passError(p, active) {
+  if (p?.schemaVersion !== 2) return 'Version 2 evidence required';
+  if (p.verdict !== 'PASS') return 'Verdict is not PASS';
+  if (!nonempty(p.at) || !/^\d{4}-\d\d-\d\dT/.test(p.at) || !Number.isFinite(Date.parse(p.at))) return 'Invalid timestamp';
+  if (!nonempty(p.platform)) return 'Missing verification platform';
+  if (!nonempty(p.tree) || p.treeBefore !== p.tree) return 'Code changed during verification';
+  if (p.criteriaDigest !== active.digest) return 'Acceptance criteria changed';
+  if (!list(p.checks)) return 'Missing checks';
+  for (const [index, check] of p.checks.entries()) {
+    if (!nonempty(check?.summary)) return 'Missing summary for check ' + index;
+    if (check.type === 'inspection' && nonempty(check.artifact)) continue;
+    if (check.type !== 'command' || !nonempty(check.command) || check.exitCode !== 0) return 'Invalid check ' + index;
   }
-  return names.filter((n) => n.endsWith('.json')).flatMap((n) => {
+  if (!Array.isArray(p.unverified) || p.unverified.length) return 'Outstanding checks';
+  if (p.criteria?.length !== active.criteria.length || !Array.isArray(p.criteria)) return 'Criteria count differs';
+  for (const [i, row] of p.criteria.entries()) {
+    if (row?.criterion !== active.criteria[i] || row.status !== 'VERIFIED') return 'Unverified criterion ' + (i + 1);
+    if (!list(row.checks) || row.checks.some(n => !Number.isInteger(n) || n < 0 || n >= p.checks.length)) return 'Missing evidence for criterion ' + (i + 1);
+  }
+  return null;
+}
+
+export function passes(dir, platform = process.platform) {
+  let active, files;
+  const folder = path.join(dir, '.uc/verification');
+  try { active = contract(dir); files = fs.readdirSync(folder); } catch { return []; }
+  const records = [];
+  const lastFailure = new Map();
+  for (const file of files.filter(name => name.endsWith('.json'))) {
     try {
-      return [JSON.parse(fs.readFileSync(path.join(dir, n), 'utf8'))];
-    } catch {
-      return [];
-    }
-  });
+      const p = JSON.parse(fs.readFileSync(path.join(folder, file), 'utf8'));
+      if (p?.schemaVersion !== 2 || p.platform !== platform || p.criteriaDigest !== active.digest) continue;
+      if (p.verdict === 'FAIL' && Number.isFinite(Date.parse(p.at))) {
+        lastFailure.set(p.tree, Math.max(lastFailure.get(p.tree) ?? 0, Date.parse(p.at)));
+      } else if (!passError(p, active)) records.push({ ...p, file: path.join(folder, file) });
+    } catch { /* Incomplete or unreadable evidence cannot approve delivery. */ }
+  }
+  return records.filter(p => Date.parse(p.at) > (lastFailure.get(p.tree) ?? -Infinity)).sort((a, b) => Date.parse(b.at) - Date.parse(a.at));
 }
 
-const nonEmpty = (list) => Array.isArray(list) && list.length > 0;
-
-/** True for a PASS proof with nothing missing, failed or left unverified. */
-function isComplete(p) {
-  return p?.verdict === 'PASS'
-    && nonEmpty(p.checks) && p.checks.every((c) => c?.exitCode === 0)
-    && nonEmpty(p.criteria) && p.criteria.every((c) => c?.status === 'VERIFIED')
-    && Array.isArray(p.unverified) && p.unverified.length === 0;
-}
-
-/** A complete proof taken on code the checks did not change. */
-function isCompletePass(p) {
-  return isComplete(p) && typeof p.tree === 'string' && p.tree !== '' && p.treeBefore === p.tree;
-}
-
-/** The code states (trees) that a complete PASS proof vouches for. */
-export function passingTrees(projectDir) {
-  return new Set(readProofs(projectDir).filter(isCompletePass).map((p) => p.tree));
-}
+export function latestPassAt(dir) { return passes(dir).find(p => p.tree === 'none')?.at ?? null; }
+export function passingTrees(dir) { return new Set(passes(dir).map(p => p.tree)); }

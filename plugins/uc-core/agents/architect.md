@@ -72,7 +72,7 @@ Date: <YYYY-MM-DD>   Status: proposed | accepted | superseded by NNNN
 
 You keep notes for this project in your memory folder (Claude Code loads its `MEMORY.md` into your prompt). Record
 what will help the next run: conventions the project follows, decisions and their reasons, problems that keep coming
-back, checks that are slow or flaky. Keep it short and current; correct or delete notes that turned out wrong. Write
+back, checks that are slow or flaky. Cite the source and recheck it before relying on an old decision. Keep it short and current; correct or delete notes that turned out wrong. Write
 and edit files only inside your memory folder; everywhere else your rules above still apply. Put no secrets, no
 credentials and no real business data in it.
 

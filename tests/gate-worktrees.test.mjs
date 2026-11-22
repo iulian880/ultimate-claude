@@ -1,3 +1,4 @@
+import { version2 } from './helpers/contract.mjs';
 // STRICT gate: follows the worktrees the session works in, ignores planning documents (audit 2026-11-18).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -38,10 +39,10 @@ const run = (name, input, env) =>
 const stop = (cwd, env) => run('profile-gate.mjs', { session_id: 's', cwd, stop_hook_active: false }, env);
 function pass(root, tree) {
   fs.mkdirSync(path.join(root, '.uc', 'verification'), { recursive: true });
-  fs.writeFileSync(path.join(root, '.uc', 'verification', 'p.json'), JSON.stringify({
+  fs.writeFileSync(path.join(root, '.uc', 'verification', 'p.json'), JSON.stringify(version2(root, {
     verdict: 'PASS', at: new Date().toISOString(), checks: [{ command: 'npm test', exitCode: 0, summary: 'ok' }],
     criteria: [{ criterion: '1. c', status: 'VERIFIED', checks: [0] }], unverified: [], treeBefore: tree, tree,
-  }));
+  })));
 }
 
 test('an edit in the worktree Claude works in blocks the stop; a PASS written there lets it stop', () => {

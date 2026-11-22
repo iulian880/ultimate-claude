@@ -5,7 +5,7 @@
   },
   "allowCrossMarketplaceDependenciesOn": ["claude-plugins-official"],
   "metadata": {
-    "description": "Private marketplace for the Ultimate Claude Code setup: uc-core, later uc-web and uc-excel."
+    "description": "Ultimate Claude Code marketplace for uc-core and uc-excel."
   },
   "plugins": [
     {
