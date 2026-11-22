@@ -1,6 +1,6 @@
 ---
 name: release-gate
-description: Final delivery gate. Runs the project's baseline checks, checks every acceptance criterion from the spec or plan against fresh evidence, writes the proof to .uc/verification/ and returns a PASS or FAIL verdict with a status per criterion. Use before claiming work is done in STRICT, or when the profile gate asks for it. Changes nothing except the proof file.
+description: Final delivery gate. Runs the project's baseline checks, checks every acceptance criterion from the spec or plan against fresh evidence, writes the proof to .uc/verification/ and returns a PASS or FAIL verdict with a status per criterion. Use before claiming work is done in STRICT, or when the profile gate asks for it. Writes verification artifacts under .uc/.
 tools: Read, Grep, Glob, Bash, Write
 model: inherit
 effort: medium
