@@ -1,0 +1,180 @@
+[
+  {
+    "id": "api",
+    "prompt": "În openpyxl 3.1, ce trebuie să fac după ce termin de citit un workbook deschis în read-only? Arată sursa pentru versiunea asta.",
+    "anyOf": [
+      "context7-docs"
+    ],
+    "avoid": [
+      "planning-with-files"
+    ],
+    "criterion": "The answer cites matching openpyxl docs, calls wb.close() after reading, and distinguishes read-only mode. Confirm retrieval succeeded before the answer."
+  },
+  {
+    "id": "local-bug",
+    "prompt": "Avem un defect local JavaScript cu o cauză încă necunoscută. Când limita este zero, clientul încearcă de șapte ori. Investighează subject.mjs, explică unde se pierde valoarea și verifică remedierea.",
+    "anyOf": [
+      "superpowers:systematic-debugging"
+    ],
+    "avoid": [
+      "find-docs",
+      "context7-docs",
+      "planning-with-files",
+      "context7-resolve"
+    ],
+    "criterion": "Executed reproduction shows 7 before correction and 0 afterwards; null or undefined still uses the fallback."
+  },
+  {
+    "id": "handoff",
+    "prompt": "Azi închid sesiunea pe Mac. Build-ul a trecut în LibreOffice. Mâine alt coleg verifică exportul în Excel pe Windows. Lasă-i în proiect ce îi trebuie ca să continue.",
+    "anyOf": [
+      "planning-with-files"
+    ],
+    "avoid": [
+      "context7-docs",
+      "context7-resolve"
+    ],
+    "criterion": "Inspect saved handoff for Mac evidence labelled user-reported, open Windows export criterion and a concrete first action. In a fresh session, using only saved records, recover the criterion and next action."
+  },
+  {
+    "id": "simple",
+    "prompt": "Răspunde într-un singur rând: cât este 17 + 25?",
+    "anyOf": [],
+    "avoid": [
+      "context7-docs",
+      "find-docs",
+      "planning-with-files",
+      "uc-core:complexity-check",
+      "uc-core:delivery-report",
+      "uc-core:product-discovery",
+      "context7-resolve"
+    ],
+    "criterion": "Single line contains 42. No planning files or project modifications."
+  },
+  {
+    "id": "design",
+    "prompt": "Avem un singur consumator pentru un export local și niciun al doilea consumator planificat. Merită să introducem acum o coadă? Vreau o decizie tehnică argumentată.",
+    "anyOf": [
+      "uc-core:complexity-check"
+    ],
+    "avoid": [
+      "uc-core:product-discovery",
+      "planning-with-files"
+    ],
+    "criterion": "Decision names an actual driver or its absence, operational cost, simpler option and a measurable reason to revisit."
+  },
+  {
+    "id": "discovery",
+    "prompt": "Vreau o aplicație nouă de raportare, dar încă nu știm pentru cine sau ce problemă ar rezolva. De unde începem?",
+    "anyOf": [
+      "uc-core:product-discovery"
+    ],
+    "avoid": [
+      "uc-core:delivery-report",
+      "planning-with-files"
+    ],
+    "criterion": "First turn asks one concrete discovery question before proposing an implementation."
+  },
+  {
+    "id": "lesson",
+    "prompt": "În STANDARD: pentru a treia oară importul a pierdut un ID cu zero inițial. Funcția este export const importId = x => String(Number(x)). Repară în acest proiect și previne reapariția. Include un rezumat pentru PR.",
+    "anyOf": [
+      "uc-core:delivery-report"
+    ],
+    "avoid": [
+      "planning-with-files",
+      "context7-docs",
+      "context7-resolve"
+    ],
+    "criterion": "A committed-to-the-workspace regression test fails on original and passes on corrected code for '0012'. PR summary accurately describes behaviour, checks and gaps. Inspect ordering: delivery-report belongs at completion."
+  },
+  {
+    "id": "covered",
+    "prompt": "Un test existent protejează deja cazul ID-ului 0012. Explică în două fraze ce garantează testul assert.equal(importId('0012'), '0012').",
+    "anyOf": [],
+    "avoid": [
+      "uc-core:delivery-report",
+      "planning-with-files",
+      "context7-docs",
+      "context7-resolve"
+    ],
+    "criterion": "Explains preservation of leading zeroes and scope of this example. No duplicate tests, notes or ADR."
+  },
+  {
+    "id": "a11y",
+    "prompt": "Verifică accesibilitatea acestui buton de închidere: <div onclick=\"closeDialog()\">×</div>. Arată o corecție și cum o verific.",
+    "anyOf": [
+      "accessibility-engineering"
+    ],
+    "avoid": [
+      "planning-with-files"
+    ],
+    "criterion": "Repair uses native keyboard activation and accessible name; explain checks for both."
+  },
+  {
+    "id": "browser",
+    "prompt": "În pagina locală index.html butonul de confirmare pare inactiv. Reprodu în browser și identifică elementul care primește clickul.",
+    "anyOf": [
+      "browser-testing-with-devtools"
+    ],
+    "avoid": [
+      "planning-with-files"
+    ],
+    "criterion": "Show observed hit-test for the overlay and verify how the intended target can receive the click."
+  },
+  {
+    "id": "simplify",
+    "prompt": "Simplifică expresia JavaScript flag === true ? true : false păstrând comportamentul inclusiv pentru valori care nu sunt booleene.",
+    "anyOf": [
+      "code-simplification"
+    ],
+    "avoid": [
+      "context7-docs"
+    ],
+    "criterion": "Returns flag === true and checks representative non-boolean input."
+  },
+  {
+    "id": "skill",
+    "prompt": "Construiește în acest proiect un skill reutilizabil pentru convențiile din changelog. Intrările acceptate au o secțiune Unreleased și o descriere a impactului pentru utilizator.",
+    "anyOf": [
+      "skill-creator"
+    ],
+    "avoid": [
+      "planning-with-files"
+    ],
+    "criterion": "Inspect SKILL.md, trigger description, positive and near-negative examples and validation."
+  },
+  {
+    "id": "xlsx",
+    "prompt": "Creează un fișier Excel cu două valori, 3 și 4, și o formulă pentru total. Vreau registrul rezultat.",
+    "anyOf": [
+      "xlsx"
+    ],
+    "avoid": [
+      "uc-excel:vba-workflow"
+    ],
+    "criterion": "Open the artifact and inspect both numeric cells and a working sum formula."
+  },
+  {
+    "id": "architecture",
+    "prompt": "Avem un ADR cerut înainte de implementare. Am ales sincronizare offline pentru două echipe cu termeni diferiți pentru comandă. Compară două structuri de module și explică ce concept de domeniu reprezintă fiecare.",
+    "anyOf": [
+      "uc-core:architect"
+    ],
+    "avoid": [
+      "uc-core:product-discovery"
+    ],
+    "criterion": "Inspect ADR for alternatives, module boundaries and clarified terms; inspect architect child trace for appropriate use of codebase-design and domain-modeling."
+  },
+  {
+    "id": "vba",
+    "prompt": "În funcția publică VBA din Import.bas, ID-urile text cu zero inițial trebuie păstrate. Fă modificarea în surse, verifică și spune ce probă nativă lipsește.",
+    "anyOf": [
+      "uc-excel:vba-workflow"
+    ],
+    "avoid": [
+      "xlsx"
+    ],
+    "criterion": "Use a disposable Excel project with documented commands. Verify the source edit, checks run and distinct pending Windows criterion."
+  }
+]
