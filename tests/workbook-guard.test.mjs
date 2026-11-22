@@ -44,7 +44,7 @@ test('mv, rm, redirect and python script arguments are targets', () => {
   assert.deepEqual(bash('rm -f "Robot SAP v3.xlsm"'), ['Robot SAP v3.xlsm']);
   assert.deepEqual(bash('cat x > out.xlsm'), ['out.xlsm']);
   assert.deepEqual(bash('cd tools && python3 -I build_v3.py original_v2.xlsm v.bin "../livrabile/Robot SAP v3.xlsm"'),
-    ['tools/original_v2.xlsm', 'livrabile/Robot SAP v3.xlsm']);
+    [path.join('tools', 'original_v2.xlsm'), path.join('livrabile', 'Robot SAP v3.xlsm')]);
   assert.deepEqual(bash('npm test; git status'), []);
 });
 
@@ -163,7 +163,7 @@ test('PowerShell keeps backslashes; bash keeps them inside double quotes', () =>
 });
 
 test('cd changes where later paths point; >| is a redirect', () => {
-  assert.deepEqual(bash('cd livrabile && rm a.xlsm'), ['livrabile/a.xlsm']);
+  assert.deepEqual(bash('cd livrabile && rm a.xlsm'), [path.join('livrabile', 'a.xlsm')]);
   assert.deepEqual(bash('cd livrabile; cd ..; rm b.xlsm'), ['b.xlsm']);
   assert.deepEqual(bash('echo x >| out.xlsm'), ['out.xlsm']);
 });
@@ -257,7 +257,7 @@ const COMPILE = 'cd tools && ../.venv/bin/python unocheck.py "../livrabile/Robot
 test('tools the project lists in UC_EXCEL_READ_ONLY only read the workbooks they name', () => {
   assert.deepEqual(workbookTargets('Bash', { command: COMPILE }, { readOnly: ['unocheck.py'] }), []);
   assert.deepEqual(workbookTargets('Bash', { command: 'mytool a.xlsm' }, { readOnly: ['mytool'] }), []);
-  assert.deepEqual(workbookTargets('Bash', { command: COMPILE }, { readOnly: [] }), ['livrabile/Robot SAP v3.xlsm']);
+  assert.deepEqual(workbookTargets('Bash', { command: COMPILE }, { readOnly: [] }), [path.join('livrabile', 'Robot SAP v3.xlsm')]);
   const proj = project();
   assert.equal(strictRun('ro1', proj, COMPILE), 2, 'not listed: treated as a write');
   assert.equal(strictRun('ro2', proj, COMPILE, { UC_EXCEL_READ_ONLY: 'other.py, unocheck.py' }), 0);

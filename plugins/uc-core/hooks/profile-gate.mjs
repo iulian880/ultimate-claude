@@ -45,7 +45,7 @@ function treesToCheck(mainRoot, cwd, seen) {
 
 function handleTree(input, session, profile, dir, mainRoot, mainTree) {
   const roots = treesToCheck(mainRoot, input.cwd, session.worktrees);
-  const relativeProject = path.relative(mainRoot, fs.realpathSync(dir));
+  const relativeProject = path.relative(mainRoot, fs.realpathSync.native(dir));
   const blocked = session.gateBlocked && typeof session.gateBlocked === 'object' ? session.gateBlocked : {};
   const startContracts = { ...session.startContracts };
   const starts = { ...(session.starts && typeof session.starts === 'object' ? session.starts : {}) };

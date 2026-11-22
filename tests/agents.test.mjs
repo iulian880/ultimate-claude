@@ -49,7 +49,7 @@ test('release-gate documents the verification file and its schema keys', () => {
 });
 
 test('release-gate example proof is valid JSON with per-criterion statuses', () => {
-  const block = /```json\n([\s\S]*?)```/.exec(read('release-gate'));
+  const block = /```json\r?\n([\s\S]*?)```/.exec(read('release-gate'));
   assert.ok(block, 'json example missing');
   const proof = JSON.parse(block[1]);
   assert.deepEqual(Object.keys(proof).sort(), ['checks', 'criteria', 'unverified', 'verdict']);

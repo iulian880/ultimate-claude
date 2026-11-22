@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 
 const file = fileURLToPath(new URL('../installer/proposals/global-claude-md.md', import.meta.url));
 const text = () => fs.readFileSync(file, 'utf8');
-const lines = () => text().replace(/\n+$/, '').split('\n');
+const lines = () => text().replace(/\n+$/, '').split(/\r?\n/);
 
 test('first line is the @RTK.md import', () => {
   assert.equal(lines()[0], '@RTK.md');

@@ -78,6 +78,6 @@ test('parallel worktree edits remain visible to the parent session Stop hook', a
     child.on('error',reject); child.on('close',code => code === 0 ? resolve() : reject(Error('Hook exit '+code)));
     child.stdin.end(JSON.stringify({...event,agent_id:'worker'+i,tool_input:{file_path:path.join(root,'a')}}));
   })));
-  assert.deepEqual(readSession('parent',env).worktrees.sort(),roots.map(r => fs.realpathSync(r)).sort());
+  assert.deepEqual(readSession('parent',env).worktrees.sort(),roots.map(r => fs.realpathSync.native(r)).sort());
   assert.equal(sync('profile-gate.mjs',event),2);
 });
