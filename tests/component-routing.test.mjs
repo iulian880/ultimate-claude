@@ -5,6 +5,7 @@ import { cases, grade } from '../scripts/grade-routing.mjs';
 import { handle } from '../plugins/uc-core/hooks/session-start.mjs';
 
 const capture = (calls, complete = true) => [
+  { type: 'system', subtype: 'init', plugins: [{name:'uc-core'}] },
   { type: 'assistant', message: { content: calls.map(([name,input],i) => ({ type:'tool_use', id:String(i), name,input })) } },
   { type: 'result', subtype: complete ? 'success' : 'error_during_execution', is_error: !complete },
 ].map(value => JSON.stringify(value)).join('\n');
@@ -39,4 +40,5 @@ test('unnecessary triggers and incomplete runs cannot pass', () => {
   assert.equal(grade(simple,capture([skill('planning-with-files')])).routing,'fail');
   assert.equal(grade(simple,capture([],false)).routing,'incomplete');
   assert.equal(grade(simple,'').pass,false);
+  assert.equal(grade(simple,capture([]).replace('uc-core','other-plugin')).routing,'incomplete');
 });
