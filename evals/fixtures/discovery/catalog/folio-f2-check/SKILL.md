@@ -1,0 +1,1 @@
+Catalog entry: folio-f2-check. Validates .folio archives against the F2 profile and emits a JSON verdict. Requires the Folio F2 validator runtime. A valid F2 archive must pass and one missing its required manifest must fail.
