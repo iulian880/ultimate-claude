@@ -25,7 +25,7 @@ function git(args, cwd, env = process.env) {
 
 const real = (p) => {
   try {
-    return fs.realpathSync(p);
+    return fs.realpathSync.native(p);
   } catch {
     return p;
   }
@@ -47,7 +47,7 @@ export function commonDir(dir) {
 /** Every working tree of the repository that contains `dir` (main checkout first), or []. */
 export function worktreeRoots(dir) {
   const out = git(['worktree', 'list', '--porcelain'], dir);
-  return out ? out.split('\n').filter((l) => l.startsWith('worktree ')).map((l) => real(l.slice(9))) : [];
+  return out ? out.split(/\r?\n/).filter((l) => l.startsWith('worktree ')).map((l) => real(l.slice(9))) : [];
 }
 
 /** The tree of the commit checked out in `dir`, or null. */

@@ -26,6 +26,7 @@ function status(sessionId) {
     if (!Array.isArray(plugins)) return 'unknown';
     const matches = plugins.filter(p => p.id?.split('@')[0] === name);
     if (matches.some(p => p.enabled === true)) return 'enabled';
+    if (matches.length && matches.every(p => p.enabled === false)) return 'disabled';
     return matches.length ? 'installed; activation unconfirmed' : 'not listed';
   }
   const layers = [

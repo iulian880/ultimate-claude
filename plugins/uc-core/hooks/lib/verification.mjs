@@ -28,8 +28,8 @@ export function contract(dir, source) {
     }
   }
   if (!nonempty(source) || path.isAbsolute(source)) throw Error('Expected a project-relative criteria file');
-  const file = fs.realpathSync(path.resolve(dir, source));
-  const relative = path.relative(fs.realpathSync(dir), file);
+  const file = fs.realpathSync.native(path.resolve(dir, source));
+  const relative = path.relative(fs.realpathSync.native(dir), file);
   if (relative.startsWith('..' + path.sep) || relative === '..' || path.isAbsolute(relative)) throw Error('Criteria outside project');
   source = relative.split(path.sep).join('/');
   const sections = fs.readFileSync(file, 'utf8').replace(/\r\n/g, '\n').split(/^## /m).slice(1)
