@@ -14,7 +14,7 @@ fs.mkdirSync(output); // refuse to overwrite a previous pilot
 const suites = {
   regression: {
     source: 'export const limit = (saved, fallback) => saved || fallback;\n',
-    prompt: 'Fix saved retry limits so zero disables retries and absent values use the fallback. Add and run a regression test. Keep the public API.',
+    prompt: 'Preserve each supplied numeric retry limit, including zero. Use the fallback only for null or undefined. Add and run a regression test. Keep the public API.',
     grade: 'Check that zero, positive, negative, null and undefined behave per contract. Run the submitted test against original and final source. Record false positives and unnecessary edits.',
     hidden: "import assert from 'node:assert/strict'; import {limit} from './subject.mjs'; for (const x of [0,1,-1,null,undefined]) assert.equal(limit(x,7), x ?? 7);",
   },
@@ -57,6 +57,9 @@ try {
     }
   }
   fs.writeFileSync(path.join(output,'plan.json'),JSON.stringify(plan,null,2)+'\n');
-  fs.writeFileSync(path.join(output,'scores.csv'),'id,criteria_passed,criteria_total,defects_found,false_positives,interventions,duration_ms,input_tokens,output_tokens,cache_tokens,cost_usd,dependency_cost_usd,accepted\n'+plan.map(r=>r.id+',,,,,,,,,,,,,').join('\n')+'\n');
+  const columns = ['id','criteria_passed','criteria_total','defects_found','false_positives','interventions',
+    'duration_ms','input_tokens','output_tokens','cache_tokens','cost_usd','dependency_cost_usd','accepted'];
+  const scores = plan.map(run => columns.map(column => column === 'id' ? run.id : '').join(','));
+  fs.writeFileSync(path.join(output,'scores.csv'), [columns.join(','), ...scores].join('\n') + '\n');
   console.log('Prepared '+plan.length+' offline runs in '+output);
 } finally { fs.rmSync(seed,{recursive:true,force:true}); }
