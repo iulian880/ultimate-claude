@@ -13,7 +13,7 @@ ultimate-claude/
 ├── components.lock.json                      [1] third-party components: pinned version, license, scope, default,
 │                                                 install / uninstall / verify, bringsHooks, bringsMcp, alwaysOnTokens
 ├── .claude-plugin/
-│   └── marketplace.json                      [1] private marketplace: uc-core, uc-web [3], uc-excel [4]
+│   └── marketplace.json                      [1] public marketplace: uc-core, uc-web [3], uc-excel [4]
 ├── bin/
 │   ├── uc.ps1                                [1] uc <minimal|standard|strict> → claude --settings <profile>
 │   └── uc                                    [1] same, POSIX shell

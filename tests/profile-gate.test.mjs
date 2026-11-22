@@ -1,3 +1,4 @@
+import { version2 } from './helpers/contract.mjs';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
@@ -16,7 +17,7 @@ function projectWith(files) {
   const vdir = path.join(dir, '.uc', 'verification');
   fs.mkdirSync(vdir, { recursive: true });
   for (const [name, content] of Object.entries(files)) {
-    fs.writeFileSync(path.join(vdir, name), typeof content === 'string' ? content : JSON.stringify(content));
+    fs.writeFileSync(path.join(vdir, name), typeof content === 'string' ? content : JSON.stringify(version2(dir, {treeBefore: 'none', tree: 'none', ...content})));
   }
   return dir;
 }
@@ -77,7 +78,7 @@ test('latestPassAt returns the newest PASS', () => {
   const dir = projectWith({
     'old.json': { ...COMPLETE, at: BEFORE },
     'new.json': { ...COMPLETE, at: EDIT },
-    'fail.json': { verdict: 'FAIL', at: AFTER, checks: [], unverified: [] },
+    'fail.json': { verdict: 'FAIL', at: BEFORE, checks: [], unverified: [] },
   });
   assert.equal(latestPassAt(dir), EDIT);
 });

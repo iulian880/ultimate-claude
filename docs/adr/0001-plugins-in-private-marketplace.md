@@ -1,5 +1,8 @@
 # 0001. Ship the setup as plugins in a private marketplace
 
+> Actualizare 22.11.2026. Repository-ul este public. Pentru politica actuală de profiluri, review și dovezi v2, vezi [README](../../README.md). Documentul păstrează contextul deciziei inițiale.
+
+
 Date: 2026-11-17   Status: accepted
 
 ## Context

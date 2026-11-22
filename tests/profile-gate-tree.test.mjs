@@ -1,3 +1,4 @@
+import { version2 } from './helpers/contract.mjs';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
@@ -27,7 +28,7 @@ function repo() {
 
 const proof = (dir, name, body) => {
   fs.mkdirSync(path.join(dir, '.uc', 'verification'), { recursive: true });
-  fs.writeFileSync(path.join(dir, '.uc', 'verification', name), JSON.stringify(body));
+  fs.writeFileSync(path.join(dir, '.uc', 'verification', name), JSON.stringify(version2(dir, body, '1. c')));
 };
 const goodChecks = [{ command: 'npm test', exitCode: 0, summary: 'ok' }];
 
@@ -45,7 +46,7 @@ test('shouldBlockTree: only STRICT, only when the tree changed, unless a PASS ma
 
 test('passingTrees: a proof counts only with a tree, passing checks and every criterion VERIFIED', () => {
   const dir = tmp('uc proofs ');
-  proof(dir, 'ok.json', { verdict: 'PASS', at: 'x', treeBefore: 'T1', tree: 'T1', checks: goodChecks, criteria: [{ criterion: 'c', status: 'VERIFIED', checks: [0] }], unverified: [] });
+  proof(dir, 'ok.json', { verdict: 'PASS', at: new Date().toISOString(), treeBefore: 'T1', tree: 'T1', checks: goodChecks, criteria: [{ criterion: '1. c', status: 'VERIFIED', checks: [0] }], unverified: [] });
   proof(dir, 'notree.json', { verdict: 'PASS', at: '2099-01-01T00:00:00Z', checks: goodChecks });
   proof(dir, 'nochecks.json', { verdict: 'PASS', tree: 'T2', checks: [] });
   proof(dir, 'failedcheck.json', { verdict: 'PASS', tree: 'T3', checks: [{ command: 'x', exitCode: 1, summary: '' }] });

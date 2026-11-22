@@ -1,6 +1,6 @@
 # ultimate-claude
 
-Private Claude Code plugin marketplace. Design: [docs/DESIGN.md](docs/DESIGN.md) (Romanian). Layout: [STRUCTURE.md](STRUCTURE.md).
+Public Claude Code plugin marketplace. Design: [docs/DESIGN.md](docs/DESIGN.md) (Romanian). Layout: [STRUCTURE.md](STRUCTURE.md).
 
 ## Plugins
 
@@ -11,7 +11,7 @@ Private Claude Code plugin marketplace. Design: [docs/DESIGN.md](docs/DESIGN.md)
 | `uc-web` | not written (Plan 3) | web projects | — |
 
 Plans are in [docs/plans/](docs/plans/), and what was verified on which machine is in [docs/verification/](docs/verification/).
-`components.lock.json` lists the third-party components with pinned versions; `installer/proposals/global-claude-md.md`
+`components.lock.json` lists the third-party components with version and marketplace references; `installer/proposals/global-claude-md.md`
 is the global `CLAUDE.md` block.
 
 The plugins have no `version` on purpose. Installed from git, Claude Code then uses the commit, so
@@ -47,6 +47,14 @@ claude --plugin-dir ~/.claude/plugins/cache/claude-plugins-official/security-gui
 `MINIMAL`, `STANDARD` (default), `STRICT`. Switch for one session by starting a prompt with `profil strict`
 (or `profile strict`), per project with `env.UC_PROFILE` in `.claude/settings.json`, or from a terminal with
 `bin/uc strict`. See the `uc-profile` skill.
+
+## Verification and current workflow
+
+Use `bin/uc status` (Windows: `bin/uc.ps1 status`) from the target project. The model is inherited by all four agents. STANDARD uses a second review only for a distinct obligation. An explicit STRICT request retains its verification requirements. Profiles guide rigour; plugin activation is per project.
+
+Git releases use version 2 evidence tied to code, acceptance criteria and platform. See [commands and migration](docs/verification-v2.md). [Prepare the eight-run offline pilot](docs/pilot.md) to compare Superpowers with and without UC.
+
+The local verification covered macOS, both plugin manifests and hook integration. The CI matrix runs Node tests on Windows, macOS and Linux. Excel and SAP acceptance still require their actual runtime. Historical measurements remain dated in docs/verification.
 
 ## Credits
 

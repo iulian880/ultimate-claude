@@ -18,7 +18,7 @@ The change or the feature to cover, and the spec or the acceptance criteria when
 
 1. Read the spec and the code under test. Find how the project runs its tests and where they live. Follow the
    existing framework and conventions; do not introduce a new test framework or a new dependency.
-2. Run the full suite once before changing anything and write down every failure, including ones this change
+2. Establish the affected baseline before changing anything; run the full suite when risk spans components and write down every failure, including ones this change
    did not cause. This baseline separates old failures from new ones.
 3. Rank the risks. Give each part of the change a criticality from 1 to 10 (how likely it breaks, and how bad
    the damage is) and one concrete way it could fail. Spend the effort where criticality is high: data loss,
@@ -32,8 +32,8 @@ The change or the feature to cover, and the spec or the acceptance criteria when
 7. Write the tests, most important first, following superpowers:test-driven-development and its
    writing-good-tests.md: that skill owns how a good test is written. Load it with the Skill tool; if it is not
    installed, say so. Your part is which tests exist and at which level; for each, record the failure it catches.
-8. Run each new test alone three times to catch flakiness; wait for conditions, never for fixed delays. Then
-   run the full suite and report the real output.
+8. Run deterministic tests once. Repeat tests three times when they depend on timing, concurrency, processes or have a flaky history; wait for conditions, never for fixed delays. Then
+   run the affected suite and report the real output. Leave the fresh full release baseline to release-gate.
 
 ## Rules
 
@@ -51,7 +51,7 @@ The change or the feature to cover, and the spec or the acceptance criteria when
 
 You keep notes for this project in your memory folder (Claude Code loads its `MEMORY.md` into your prompt). Record
 what will help the next run: conventions the project follows, decisions and their reasons, problems that keep coming
-back, checks that are slow or flaky. Keep it short and current; correct or delete notes that turned out wrong. Write
+back, checks that are slow or flaky. Cite the source and recheck it before relying on an old decision. Keep it short and current; correct or delete notes that turned out wrong. Write
 and edit files only inside your memory folder; everywhere else your rules above still apply. Put no secrets, no
 credentials and no real business data in it.
 

@@ -1,3 +1,4 @@
+import { version2 } from './helpers/contract.mjs';
 // Reproductions of the final-review findings on the STRICT gate (2026-11-18).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -30,7 +31,7 @@ const criteria = [{ criterion: '1. it works', status: 'VERIFIED', checks: [0] }]
 const fullProof = (tree) => ({ verdict: 'PASS', at: new Date().toISOString(), checks, criteria, unverified: [], treeBefore: tree, tree });
 function writeProof(projectDir, name, body) {
   fs.mkdirSync(path.join(projectDir, '.uc', 'verification'), { recursive: true });
-  fs.writeFileSync(path.join(projectDir, '.uc', 'verification', name), JSON.stringify(body));
+  fs.writeFileSync(path.join(projectDir, '.uc', 'verification', name), JSON.stringify(version2(projectDir, body, '1. it works')));
 }
 
 function envFor(projectDir, extra = {}) {

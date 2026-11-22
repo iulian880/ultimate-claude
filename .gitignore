@@ -2,3 +2,4 @@ node_modules/
 .uc/
 *.log
 .DS_Store
+plugins/uc-core/evals/results/

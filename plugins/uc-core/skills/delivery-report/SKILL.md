@@ -9,6 +9,8 @@ when_to_use: Use at the end of STANDARD or STRICT work, before claiming that a t
 A report the user can act on without re-reading the session. Every claim in it is either backed by a
 command that was run, or listed as not verified.
 
+Record the effective profile, reason for escalation, and checks actually performed. Distinguish Mac/LibreOffice, Windows/Excel and SAP evidence.
+
 ## Before writing
 
 1. Run the project's checks now (tests, build, lint, type check), unless they ran after the last edit. A
