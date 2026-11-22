@@ -16,7 +16,9 @@ function component(call) {
 export function grade(scenario, raw, review) {
   const events = raw.trim().split(/\r?\n/).filter(Boolean).map(line => JSON.parse(line));
   const terminal = events.at(-1);
-  const complete = terminal?.type === 'result' && terminal.subtype === 'success' && terminal.is_error === false;
+  const init = events.find(event => event.type === 'system' && event.subtype === 'init');
+  const pluginLoaded = init?.plugins?.some(plugin => plugin.name === 'uc-core') === true;
+  const complete = pluginLoaded && terminal?.type === 'result' && terminal.subtype === 'success' && terminal.is_error === false;
   const calls = new Map();
   for (const event of events) {
     if (event.type !== 'assistant') continue;
@@ -34,7 +36,7 @@ export function grade(scenario, raw, review) {
   const routing = complete ? (selected && !unnecessary.length ? 'pass' : 'fail') : 'incomplete';
   const outcome = complete ? review?.outcome ?? 'ungraded' : 'incomplete';
   const timing = complete ? review?.timing ?? 'ungraded' : 'incomplete';
-  return { id: scenario.id, sha256: digest, observed, unnecessary, routing, timing, outcome,
+  return { id: scenario.id, sha256: digest, pluginLoaded, observed, unnecessary, routing, timing, outcome,
     criterion: scenario.criterion, evidence: review?.evidence, pass: [routing,timing,outcome].every(x => x === 'pass') };
 }
 
