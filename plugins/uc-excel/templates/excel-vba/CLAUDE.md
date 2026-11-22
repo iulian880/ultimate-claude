@@ -22,4 +22,4 @@ VBA code lives as text in `<sources dir>/` (`.bas`, `.cls`); the workbook is bui
 - Edit only the sources, never the built workbook.
 - No real business data in fixtures or tests; never write passwords to files.
 - Do not lower macro security to make a check pass.
-- Running the workbook in Excel on Windows is the user's check, not an acceptance criterion here.
+- When the contract requires native Windows Excel or SAP, record the native result separately. Keep that criterion unverified until the evidence is available.

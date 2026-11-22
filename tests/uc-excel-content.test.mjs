@@ -45,7 +45,7 @@ test('vba-workflow: the seven steps in order, commands from CLAUDE.md, Windows i
     assert.ok(i > at - 1 && i !== -1, `step out of order or missing: ${step}`);
     at = i;
   }
-  for (const w of ['CLAUDE.md', 'excel-vba-reviewer', 'YYYYMMDD-HHMMSS', 'MINIMAL', 'not an acceptance criterion']) {
+  for (const w of ['CLAUDE.md', 'excel-vba-reviewer', 'YYYYMMDD-HHMMSS', 'MINIMAL', 'mark the criterion unverified']) {
     assert.ok(text.includes(w), w);
   }
 });

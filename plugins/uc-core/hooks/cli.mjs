@@ -29,6 +29,16 @@ function status(sessionId) {
     if (matches.length && matches.every(p => p.enabled === false)) return 'disabled';
     return matches.length ? 'installed; activation unconfirmed' : 'not listed';
   }
+  // On Windows npm exposes ctx7 as a .cmd shim. Only the fixed version probe goes through cmd.
+  const probe = process.platform === 'win32'
+    ? spawnSync('cmd.exe', ['/d', '/c', 'ctx7 --version'], { encoding: 'utf8', timeout: 5000 })
+    : spawnSync('ctx7', ['--version'], { encoding: 'utf8', timeout: 5000 });
+  const context7 = {
+    cliVersion: probe.status === 0 ? probe.stdout.trim() || null : null,
+    cliStatus: probe.status === 0 ? 'available' : probe.error?.code === 'ENOENT' ? 'missing' : 'unavailable',
+    userFindDocs: fs.existsSync(path.join(configBase(), 'skills/find-docs/SKILL.md')),
+    userPlanningWithFiles: fs.existsSync(path.join(configBase(), 'skills/planning-with-files/SKILL.md')),
+  };
   const layers = [
     ['local project settings', path.join(dir, '.claude/settings.local.json')],
     ['project settings', path.join(dir, '.claude/settings.json')],
@@ -43,7 +53,7 @@ function status(sessionId) {
   const [profileSource, profile] = candidates.map(([s,v]) => [s,typeof v === 'string' ? v.trim().toLowerCase() : null]).find(([,v]) => PROFILES.includes(v));
   const security = process.env.ENABLE_CODE_SECURITY_REVIEW ?? layers.map(([,env]) => env.ENABLE_CODE_SECURITY_REVIEW).find(v => v !== undefined);
   const tree = treeFingerprint(dir);
-  json({ profile, profileSource, sessionId: sessionId ?? null, superpowers: availability('superpowers'),
+  json({ context7, profile, profileSource, sessionId: sessionId ?? null, superpowers: availability('superpowers'),
     securityGuidance: availability('security-guidance'), ucCore: availability('uc-core'),
     securityReviewSetting: security ?? 'plugin default if enabled',
     platform: process.platform, currentPass: tree ? passes(dir).find(p => p.tree === tree)?.file ?? null : null });

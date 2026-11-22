@@ -9,6 +9,8 @@ when_to_use: Use when the user asks about or switches the MINIMAL, STANDARD or S
 A profile sets how much verification the work gets. It does not limit how carefully you think, and it does
 not turn plugins on or off.
 
+At session start uc-core supplies the [component selection rules](../../component-routing.md). Apply them when the task reaches the trigger.
+
 ## The three profiles
 
 | | MINIMAL | STANDARD (default) | STRICT |

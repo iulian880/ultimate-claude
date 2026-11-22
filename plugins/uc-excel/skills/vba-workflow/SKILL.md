@@ -36,15 +36,14 @@ whole output.
 
 - Run the `excel-vba-reviewer` agent on the change, in every profile.
 - Then the review the session profile asks for: nothing more in MINIMAL; in STANDARD and STRICT the Superpowers code
-  review, then the uc-core `code-reviewer` conformance review before finishing the branch (where uc-core is enabled).
+  review where applicable. Add uc-core conformance review for a named contract, ADR or compatibility obligation.
   The VBA reviewer's report goes to that review.
 - The delivery report lists the commands of steps 3 to 6 with their real results.
 
 ## What "verified" means here
 
-Lint, build, compile check and tests, run on this machine after the last edit. Whether the macro works in real Excel
-or SAP on Windows is the user's check: it is not an acceptance criterion for the release gate, and the report
-mentions it only as a note for the user.
+Lint, build, compile check and tests, run on this machine after the last edit. For a contract that requires native Windows Excel or SAP, the user or authorized tester supplies that evidence.
+Until then, mark the criterion unverified and keep the release gate open.
 
 ## Rules
 
