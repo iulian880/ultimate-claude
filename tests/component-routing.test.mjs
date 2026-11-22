@@ -42,3 +42,30 @@ test('unnecessary triggers and incomplete runs cannot pass', () => {
   assert.equal(grade(simple,'').pass,false);
   assert.equal(grade(simple,capture([]).replace('uc-core','other-plugin')).routing,'incomplete');
 });
+
+test('a direct answer rejects unexpected specialists but allows ordinary tools', () => {
+  for (const call of [skill('accessibility-engineering'), ['Agent',{subagent_type:'Explore'}]]) {
+    assert.equal(grade(simple,capture([call])).routing,'fail');
+  }
+  assert.equal(grade(simple,capture([['Read',{file_path:'README.md'}]])).routing,'pass');
+});
+
+test('recognizes the approved workbook skill under both installed names', () => {
+  const xlsx = cases.find(item => item.id === 'xlsx');
+  const vba = cases.find(item => item.id === 'vba');
+  for (const name of ['xlsx','anthropic-skills:xlsx']) {
+    assert.equal(grade(xlsx,capture([skill(name)])).routing,'pass');
+    assert.equal(grade(vba,capture([skill(name)])).routing,'fail');
+  }
+  assert.equal(grade(xlsx,capture([skill('unrelated:xlsx')])).routing,'fail');
+});
+
+test('identical requests expect opposite discovery decisions when project capabilities differ', () => {
+  const gap = cases.find(item => item.id === 'discovery-gap');
+  const local = cases.find(item => item.id === 'discovery-local');
+  assert.equal(gap.prompt,local.prompt);
+  for (const [scenario,withSkill,withoutSkill] of [[gap,'pass','fail'],[local,'fail','pass']]) {
+    assert.equal(grade(scenario,capture([skill('uc-core:product-discovery')])).routing,withSkill);
+    assert.equal(grade(scenario,capture([])).routing,withoutSkill);
+  }
+});

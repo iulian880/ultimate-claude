@@ -5,7 +5,12 @@ import { isMain } from '../plugins/uc-core/hooks/lib/hook-io.mjs';
 
 export const cases = JSON.parse(fs.readFileSync(new URL('../evals/component-routing.json', import.meta.url)));
 function component(call) {
-  if (call.name === 'Skill') return call.input?.skill?.replace(/^planning-with-files:planning-with-files$/, 'planning-with-files');
+  if (call.name === 'Skill') {
+    const name = call.input?.skill;
+    if (name === 'anthropic-skills:xlsx') return 'xlsx';
+    if (name === 'planning-with-files:planning-with-files') return 'planning-with-files';
+    return name;
+  }
   if (['Agent','Task'].includes(call.name)) return call.input?.subagent_type;
   if (/^mcp__[^/]*context7[^/]*__resolve-library-id$/i.test(call.name)) return 'context7-resolve';
   if (['Bash','PowerShell'].includes(call.name) && /^(?:rtk bypass\s+)?ctx7\s+library\s+/m.test(call.input?.command ?? '')) return 'context7-resolve';
@@ -27,7 +32,7 @@ export function grade(scenario, raw, review) {
     }
   }
   const observed = [...new Set([...calls.values()].filter(Boolean))];
-  const unnecessary = scenario.avoid.filter(x => observed.includes(x));
+  const unnecessary = scenario.noComponents ? observed : scenario.avoid.filter(x => observed.includes(x));
   const selected = !scenario.anyOf.length || scenario.anyOf.some(x => observed.includes(x));
   const digest = createHash('sha256').update(raw).digest('hex');
   if (review && (review.id !== scenario.id || review.sha256 !== digest ||

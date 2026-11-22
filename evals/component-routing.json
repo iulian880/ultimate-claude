@@ -40,16 +40,9 @@
     "id": "simple",
     "prompt": "Răspunde într-un singur rând: cât este 17 + 25?",
     "anyOf": [],
-    "avoid": [
-      "context7-docs",
-      "find-docs",
-      "planning-with-files",
-      "uc-core:complexity-check",
-      "uc-core:delivery-report",
-      "uc-core:product-discovery",
-      "context7-resolve"
-    ],
-    "criterion": "Single line contains 42. No planning files or project modifications."
+    "avoid": [],
+    "criterion": "Single line contains 42. No planning files or project modifications.",
+    "noComponents": true
   },
   {
     "id": "design",
@@ -73,6 +66,26 @@
       "planning-with-files"
     ],
     "criterion": "Checks available capabilities and project catalog before recommending folio-f2-check. Identifies JSON verdict and a valid/invalid F2 pair to test. Excludes the preview-only skill. No installation or invented execution."
+  },
+  {
+    "id": "discovery-gap",
+    "prompt": "Pentru predarea proiectului, află cum putem verifica pachetele .folio cu validatorul F2 aprobat și obține un verdict JSON. Indică primul pas concret și ce ai putut confirma.",
+    "anyOf": [
+      "uc-core:product-discovery"
+    ],
+    "avoid": [
+      "planning-with-files"
+    ],
+    "criterion": "Inspects project capabilities, then checks the catalog entry for the approved validator. Identifies the F2 runtime prerequisite and a valid/invalid check. Distinguishes recommendation from execution."
+  },
+  {
+    "id": "discovery-local",
+    "prompt": "Pentru predarea proiectului, află cum putem verifica pachetele .folio cu validatorul F2 aprobat și obține un verdict JSON. Indică primul pas concret și ce ai putut confirma.",
+    "anyOf": [],
+    "avoid": [
+      "uc-core:product-discovery"
+    ],
+    "criterion": "Finds the existing project verification command in the runbook and names its JSON output. Uses the project capability directly, without external discovery. Distinguishes the documented command from a run on real data."
   },
   {
     "id": "unclear-product",
