@@ -65,15 +65,24 @@
   },
   {
     "id": "discovery",
-    "prompt": "Vreau o aplicație nouă de raportare, dar încă nu știm pentru cine sau ce problemă ar rezolva. De unde începem?",
+    "prompt": "Pentru acceptare, proiectul cere un skill care verifică un pachet .folio cu profilul F2 și produce verdict JSON. Identifică o opțiune potrivită din catalogul proiectului și explică cum i-am verifica rezultatul.",
     "anyOf": [
       "uc-core:product-discovery"
     ],
     "avoid": [
-      "uc-core:delivery-report",
       "planning-with-files"
     ],
-    "criterion": "First turn asks one concrete discovery question before proposing an implementation."
+    "criterion": "Checks available capabilities and project catalog before recommending folio-f2-check. Identifies JSON verdict and a valid/invalid F2 pair to test. Excludes the preview-only skill. No installation or invented execution."
+  },
+  {
+    "id": "unclear-product",
+    "prompt": "Vreau o aplicație nouă de raportare, dar încă nu știm pentru cine sau ce problemă ar rezolva. De unde începem?",
+    "anyOf": [],
+    "avoid": [
+      "uc-core:product-discovery",
+      "planning-with-files"
+    ],
+    "criterion": "Asks a concrete clarification about the user or problem. No external skill search or installation."
   },
   {
     "id": "lesson",
@@ -151,7 +160,8 @@
       "xlsx"
     ],
     "avoid": [
-      "uc-excel:vba-workflow"
+      "uc-excel:vba-workflow",
+      "uc-core:product-discovery"
     ],
     "criterion": "Open the artifact and inspect both numeric cells and a working sum formula."
   },
